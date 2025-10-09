@@ -84,17 +84,21 @@
       margin-top: 15px;
       font-weight: bold;
     }
-	
-	
+
+    .separador {
+      margin: 30px 0 10px;
+      font-weight: bold;
+      color: #999;
+    }
   </style>
 </head>
 
 <body>
   <main class="container">
     <h1 class="titulo-sistema">🚖 ViaSimples</h1>
-<p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – <span>Mobilidade e Gestão de Corridas</span></p>
+    <p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – <span>Mobilidade e Gestão de Corridas</span></p>
 
-
+    <!-- Login com senha -->
     <form id="formLogin" autocomplete="off">
       <label for="nomeAdmin">👤 Nome de usuário:</label>
       <input type="text" id="nomeAdmin" required />
@@ -110,16 +114,26 @@
       </div>
     </form>
 
+    <div class="separador">ou</div>
+
+    <!-- Acesso direto ao simulador sem digitar -->
+    <form id="formVisitante">
+      <div class="botoes">
+        <button type="submit">🚗 Entrar no Simulador de Corrida</button>
+      </div>
+    </form>
+
     <div id="mensagem" role="alert" aria-live="polite"></div>
   </main>
 
   <script>
+    // Login com senha
     document.getElementById("formLogin").addEventListener("submit", function(event) {
       event.preventDefault();
-      autenticarAdmin();
+      autenticarUsuario();
     });
 
-    function autenticarAdmin() {
+    function autenticarUsuario() {
       const nome = document.getElementById("nomeAdmin").value.trim();
       const senha = document.getElementById("senhaAdmin").value.trim();
       const mensagem = document.getElementById("mensagem");
@@ -129,17 +143,31 @@
         return;
       }
 
-      if (nome !== "Wagner Souza" || senha !== "Wps15012013") {
-        exibirMensagem("❌ Nome ou senha incorretos.", "red");
+      if (nome === "Wagner Souza" && senha === "Master15012013") {
+        localStorage.setItem("usuario", "admin");
+        exibirMensagem("✅ Bem-vindo, administrador!", "green");
+        setTimeout(() => window.location.href = "index.html", 1000);
         return;
       }
 
-      exibirMensagem("✅ Bem-vindo ao ViaSimples!", "green");
+      if (nome === "Motorista" && senha === "ViaSimples2025") {
+        localStorage.setItem("usuario", "motorista");
+        exibirMensagem("✅ Acesso liberado para motorista!", "green");
+        setTimeout(() => window.location.href = "02-admin-painel.html", 1000);
+        return;
+      }
 
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1000);
+      exibirMensagem("❌ Nome ou senha incorretos.", "red");
     }
+
+    // Acesso direto ao simulador
+    document.getElementById("formVisitante").addEventListener("submit", function(event) {
+      event.preventDefault();
+      localStorage.setItem("usuario", "visitante");
+      localStorage.setItem("nomeVisitante", "Visitante");
+      exibirMensagem("✅ Acesso liberado ao simulador!", "green");
+      setTimeout(() => window.location.href = "03-simulador.html", 1000);
+    });
 
     function mostrarSenha(idCampo) {
       const campo = document.getElementById(idCampo);
