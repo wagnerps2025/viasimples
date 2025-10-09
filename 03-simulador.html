@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Corrida - ViaSimples</title>
+  <link rel="stylesheet" href="style-viasimples.css">
+</head>
+
+<body>
+  <main class="container">
+    <h1>Simule sua corrida</h1>
+
+    <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
+      <label for="nomePassageiro">👤 Seu nome completo:</label>
+      <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira">
+
+      <label for="origem">📍 Local de partida:</label>
+      <input type="text" id="origem" name="origem" autocomplete="off" placeholder="Digite ou use localização atual">
+
+      <label for="destino">🎯 Destino final:</label>
+      <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo">
+
+      <div class="botoes">
+        <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
+        <button type="submit">🚗 Calcular corrida</button>
+        <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
+        <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+      </div>
+    </form>
+
+    <div id="mapaGoogle"></div>
+    <div id="resultadoCorrida" role="region" aria-live="polite"></div>
+	<section id="listaMotoristas" aria-label="Escolha de motorista"></section>
+
+  </main>
+
+  <!-- Google Maps API com Places + loading async -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async"
+    async
+  ></script>
+
+  <!-- Script principal -->
+  <script src="03-simulador-script.js"></script>
+</body>
+</html>

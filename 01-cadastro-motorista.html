@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Motorista</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #F4F6FA;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #000;
+      margin-bottom: 20px;
+    }
+
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      align-self: flex-start;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 30px;
+      border-radius: 8px;
+      border: none;
+      background-color: #FFD600;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #FFC400;
+    }
+
+    #mensagemCadastro, #contadorMotoristas {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: #000;
+    }
+
+    #contadorMotoristas {
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>📝 Cadastro de Motorista</h1>
+
+    <form id="formMotorista">
+      <label for="nome">Nome completo:</label>
+      <input type="text" id="nome" required />
+
+      <label for="telefone">Telefone (WhatsApp):</label>
+      <input type="tel" id="telefone" required />
+
+      <h2>🚗 Dados do Veículo</h2>
+
+      <label for="marca">Marca:</label>
+      <input type="text" id="marca" required />
+
+      <label for="modelo">Modelo:</label>
+      <input type="text" id="modelo" required />
+
+      <label for="cor">Cor do veículo:</label>
+      <input type="text" id="cor" required />
+
+      <label for="tipoCarro">Tipo de carro:</label>
+      <select id="tipoCarro" required>
+        <option value="">Selecione</option>
+        <option value="Hatch">Hatch</option>
+        <option value="Sedan">Sedan</option>
+        <option value="SUV">SUV</option>
+        <option value="Picape">Picape</option>
+        <option value="Van">Van</option>
+      </select>
+
+      <label for="ano">Ano:</label>
+      <input type="number" id="ano" min="2000" max="2025" required />
+
+      <label for="tipoPlaca">Tipo de Placa:</label>
+      <select id="tipoPlaca" required>
+        <option value="mercosul">Mercosul</option>
+        <option value="antiga">Antiga</option>
+      </select>
+
+      <label for="placa">Placa:</label>
+      <input type="text" id="placa" maxlength="8" required />
+
+      <button type="submit">Cadastrar Motorista</button>
+    </form>
+
+    <div id="mensagemCadastro"></div>
+    <div id="contadorMotoristas"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById("formMotorista");
+    const mensagem = document.getElementById("mensagemCadastro");
+    const contador = document.getElementById("contadorMotoristas");
+
+    function capitalizarTexto(texto) {
+      return texto
+        .toLowerCase()
+        .split(" ")
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+    }
+
+    function formatarTelefone(valor) {
+      valor = valor.replace(/\D/g, "");
+      if (valor.length === 11) {
+        return valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+      }
+      return valor;
+    }
+
+    function formatarPlaca(valor) {
+      valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (valor.length >= 7) {
+        return valor.slice(0, 3) + '-' + valor.slice(3, 7);
+      }
+      return valor;
+    }
+
+    function limparFormulario() {
+      form.reset();
+    }
+
+    function atualizarContador() {
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      contador.innerText = `Total de motoristas cadastrados: ${lista.length}`;
+    }
+
+    function gerarIdSequencial() {
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      return String(lista.length + 1);
+    }
+
+    document.getElementById("nome").addEventListener("blur", e => {
+      e.target.value = capitalizarTexto(e.target.value);
+    });
+
+    document.getElementById("marca").addEventListener("blur", e => {
+      e.target.value = capitalizarTexto(e.target.value);
+    });
+
+    document.getElementById("modelo").addEventListener("blur", e => {
+      e.target.value = capitalizarTexto(e.target.value);
+    });
+
+    document.getElementById("cor").addEventListener("blur", e => {
+      e.target.value = capitalizarTexto(e.target.value);
+    });
+
+    document.getElementById("telefone").addEventListener("blur", e => {
+      e.target.value = formatarTelefone(e.target.value);
+    });
+
+    document.getElementById("placa").addEventListener("blur", e => {
+      e.target.value = formatarPlaca(e.target.value);
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const motorista = {
+        id: gerarIdSequencial(),
+        nome: document.getElementById("nome").value.trim(),
+        telefone: document.getElementById("telefone").value.trim(),
+        marca: document.getElementById("marca").value.trim(),
+        modelo: document.getElementById("modelo").value.trim(),
+        cor: document.getElementById("cor").value.trim(),
+        "Tipo de carro": document.getElementById("tipoCarro").value,
+        ano: document.getElementById("ano").value.trim(),
+        tipoPlaca: document.getElementById("tipoPlaca").value,
+        placa: document.getElementById("placa").value.trim().toUpperCase(),
+        ativo: true
+      };
+
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      lista.push(motorista);
+      localStorage.setItem("motoristas", JSON.stringify(lista));
+
+      mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
+      atualizarContador();
+      limparFormulario();
+    });
+
+    atualizarContador();
+  </script>
+</body>
+</html>

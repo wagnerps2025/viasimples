@@ -1,0 +1,172 @@
+/* === Reset básico === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+/* === Corpo da página === */
+body {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  background-color: #F5F6F8;
+  color: #212121;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === Container principal === */
+.container {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* === Título === */
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* === Rótulos === */
+label {
+  font-weight: 600;
+  font-size: 15px;
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* === Campos de entrada === */
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #DADCE0;
+  border-radius: 12px;
+  background-color: #FFF;
+  font-size: 15px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  border-color: #FFD600;
+  outline: none;
+}
+
+/* === Botões agrupados === */
+.botoes {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+  justify-content: center;
+}
+
+button {
+  background-color: #FFD600;
+  color: #000000;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  min-width: 160px;
+}
+
+button:hover {
+  background-color: #FFC400;
+  transform: translateY(-2px);
+}
+
+/* === Mapa Google === */
+#mapaGoogle {
+  width: 100%;
+  min-height: 300px;
+  height: 400px;
+  margin-top: 30px;
+  border-radius: 12px;
+  border: 1px solid #DDD;
+  background-color: #EEE; /* fallback para Android */
+  overflow: hidden;
+}
+
+/* === Resultado da corrida === */
+#resultadoCorrida {
+  margin-top: 25px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+}
+
+/* === Lista de motoristas === */
+#listaMotoristas {
+  margin-top: 30px;
+}
+
+.motorista-card {
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #FFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.motorista-card.ativo {
+  background-color: #E3F2FD;
+}
+
+.motorista-card strong {
+  font-size: 18px;
+  color: #1A1A1A;
+}
+
+.motorista-card button {
+  margin-top: 12px;
+  background-color: #FFD600;
+  color: #000;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.motorista-card button:hover {
+  background-color: #FFC400;
+}
+
+/* === Responsivo para Android e telas menores === */
+@media (max-width: 600px) {
+  .container {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  button {
+    font-size: 15px;
+    min-width: 100%;
+  }
+
+  #mapaGoogle {
+    height: 300px;
+  }
+}

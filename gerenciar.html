@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerenciar Motoristas</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #F4F6FA;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      text-align: center;
+      color: #000;
+      margin-bottom: 30px;
+    }
+
+    .motorista-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #fff;
+      position: relative;
+    }
+
+    .motorista-card div {
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .botao-excluir {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #FF5252;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .botao-excluir:hover {
+      background-color: #E53935;
+    }
+
+    #semDados {
+      text-align: center;
+      font-weight: bold;
+      color: #666;
+      margin-top: 40px;
+    }
+
+    input, select, button {
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>👥 Gerenciar Motoristas</h1>
+
+    <div style="margin-bottom: 30px;">
+      <label for="tipoBusca">Pesquisar por:</label>
+      <select id="tipoBusca">
+        <option value="id">ID</option>
+        <option value="nome">Nome</option>
+        <option value="telefone">Telefone</option>
+        <option value="placa">Placa</option>
+      </select>
+
+      <input
+        type="text"
+        id="campoBusca"
+        placeholder="Digite para buscar..."
+        onkeyup="filtrarMotoristas()"
+        style="margin-top: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"
+      />
+
+      <button
+        onclick="filtrarMotoristas()"
+        style="margin-top: 10px; padding: 10px 20px; background-color: #FFD600; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;"
+      >
+        🔍 Buscar
+      </button>
+    </div>
+
+    <div id="listaMotoristas"></div>
+    <div id="semDados" style="display: none;">Nenhum motorista cadastrado.</div>
+  </main>
+
+  <script>
+    function exibirMotoristas(lista) {
+      const container = document.getElementById("listaMotoristas");
+      const semDados = document.getElementById("semDados");
+      container.innerHTML = "";
+
+      if (lista.length === 0) {
+        semDados.style.display = "block";
+        return;
+      }
+
+      semDados.style.display = "none";
+
+      lista.forEach((motorista, index) => {
+        const card = document.createElement("div");
+        card.className = "motorista-card";
+        card.innerHTML = `
+          <div><strong>ID:</strong> ${motorista.id}</div>
+          <div><strong>Nome:</strong> ${motorista.nome}</div>
+          <div><strong>Telefone:</strong> ${motorista.telefone}</div>
+          <div><strong>Marca:</strong> ${motorista.marca}</div>
+          <div><strong>Modelo:</strong> ${motorista.modelo}</div>
+          <div><strong>Cor:</strong> ${motorista.cor}</div>
+          <div><strong>Tipo de carro:</strong> ${motorista["Tipo de carro"]}</div>
+          <div><strong>Ano:</strong> ${motorista.ano}</div>
+          <div><strong>Tipo de placa:</strong> ${motorista.tipoPlaca}</div>
+          <div><strong>Placa:</strong> ${motorista.placa}</div>
+          <button class="botao-excluir" onclick="excluirMotorista(${index})">🗑️ Excluir</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function excluirMotorista(index) {
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      const confirmado = confirm(`Tem certeza que deseja excluir o motorista ${lista[index].nome}?`);
+      if (confirmado) {
+        lista.splice(index, 1);
+        localStorage.setItem("motoristas", JSON.stringify(lista));
+        filtrarMotoristas();
+      }
+    }
+
+    function filtrarMotoristas() {
+      const tipo = document.getElementById("tipoBusca").value;
+      const termo = document.getElementById("campoBusca").value.trim().toLowerCase();
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+
+      if (termo === "") {
+        exibirMotoristas(lista);
+        return;
+      }
+
+      const filtrados = lista.filter(motorista => {
+        const valor = (motorista[tipo] || "").toString().toLowerCase();
+        return valor.includes(termo);
+      });
+
+      exibirMotoristas(filtrados);
+    }
+
+    window.onload = () => {
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      exibirMotoristas(lista);
+    };
+  </script>
+</body>
+</html>

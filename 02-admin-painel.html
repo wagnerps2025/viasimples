@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Motoristas - ViaSimples</title>
+  <link rel="stylesheet" href="style-viasimples.css">
+  <style>
+    .motorista-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    .motorista-card.ativo {
+      background-color: #E3F2FD;
+    }
+
+    .motorista-card.inativo {
+      background-color: #EEEEEE;
+    }
+
+    .motorista-id {
+      font-size: 13px;
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .motorista-nome {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .motorista-telefone {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .motorista-status {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .motorista-status.ativo {
+      color: #2E7D32; /* verde */
+    }
+
+    .motorista-status.inativo {
+      color: #C62828; /* vermelho */
+    }
+
+    .botao-status {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      background-color: #FFD600;
+      color: #000;
+    }
+
+    .botao-status:hover {
+      background-color: #FFC400;
+    }
+
+    #semDados {
+      text-align: center;
+      font-weight: bold;
+      color: #666;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Painel de Motoristas</h1>
+
+    <section id="listaMotoristas" aria-label="Lista de motoristas cadastrados"></section>
+
+    <div class="botoes">
+      <button type="button" onclick="carregarMotoristas()">🔄 Atualizar lista</button>
+    </div>
+  </main>
+
+  <script>
+    function carregarMotoristas() {
+      const lista = document.getElementById("listaMotoristas");
+      const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
+
+      lista.innerHTML = "";
+
+      if (motoristas.length === 0) {
+        lista.innerHTML = "<p id='semDados'>Nenhum motorista cadastrado.</p>";
+        return;
+      }
+
+      motoristas.forEach((motorista, index) => {
+        const card = document.createElement("div");
+        card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
+
+        card.innerHTML = `
+          <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
+          <div class="motorista-nome">👤 ${motorista.nome}</div>
+          <div class="motorista-telefone">📞 ${motorista.telefone}</div>
+          <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
+            🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
+          </div>
+          <button class="botao-status" onclick="alterarStatus(${index})">
+            ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
+          </button>
+        `;
+
+        lista.appendChild(card);
+      });
+    }
+
+    function alterarStatus(index) {
+      const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
+      motoristas[index].ativo = !motoristas[index].ativo;
+      localStorage.setItem("motoristas", JSON.stringify(motoristas));
+      carregarMotoristas();
+    }
+
+    carregarMotoristas();
+  </script>
+</body>
+</html>
