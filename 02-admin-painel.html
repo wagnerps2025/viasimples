@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Motoristas - ViaSimples</title>
   <link rel="stylesheet" href="style-viasimples.css">
+
   <style>
     .motorista-card {
       border: 1px solid #ccc;
@@ -47,11 +48,11 @@
     }
 
     .motorista-status.ativo {
-      color: #2E7D32; /* verde */
+      color: #2E7D32;
     }
 
     .motorista-status.inativo {
-      color: #C62828; /* vermelho */
+      color: #C62828;
     }
 
     .botao-status {
@@ -78,6 +79,23 @@
 </head>
 
 <body>
+  <script>
+    const usuario = localStorage.getItem("usuario");
+
+    if (usuario !== "motorista" && usuario !== "admin") {
+      document.write(`
+        <main style="text-align:center; padding:60px; font-family:sans-serif;">
+          <h2>🔒 Acesso restrito</h2>
+          <p>Você precisa estar autenticado como <strong>administrador</strong> ou <strong>motorista</strong> para visualizar esta página.</p>
+          <p>Redirecionando para login...</p>
+        </main>
+      `);
+      setTimeout(() => {
+        window.location.href = "00-login-admin.html";
+      }, 2000);
+    }
+  </script>
+
   <main class="container">
     <h1>Painel de Motoristas</h1>
 
@@ -89,6 +107,8 @@
   </main>
 
   <script>
+    const podeEditar = localStorage.getItem("usuario") === "admin";
+
     function carregarMotoristas() {
       const lista = document.getElementById("listaMotoristas");
       const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
@@ -104,6 +124,15 @@
         const card = document.createElement("div");
         card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
 
+        let botaoHTML = "";
+        if (podeEditar) {
+          botaoHTML = `
+            <button class="botao-status" onclick="alterarStatus(${index})">
+              ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
+            </button>
+          `;
+        }
+
         card.innerHTML = `
           <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
           <div class="motorista-nome">👤 ${motorista.nome}</div>
@@ -111,9 +140,7 @@
           <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
             🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
           </div>
-          <button class="botao-status" onclick="alterarStatus(${index})">
-            ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
-          </button>
+          ${botaoHTML}
         `;
 
         lista.appendChild(card);
@@ -121,6 +148,8 @@
     }
 
     function alterarStatus(index) {
+      if (!podeEditar) return;
+
       const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
       motoristas[index].ativo = !motoristas[index].ativo;
       localStorage.setItem("motoristas", JSON.stringify(motoristas));
