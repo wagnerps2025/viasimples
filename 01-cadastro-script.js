@@ -3,6 +3,21 @@
   const mensagem = document.getElementById("mensagemCadastro");
   const contador = document.getElementById("contadorMotoristas");
 
+  const usuario = localStorage.getItem("usuario");
+
+  // Bloqueia alterações se o usuário for um motorista
+  if (usuario === "motorista") {
+    // Desabilita todos os campos do formulário
+    Array.from(form.elements).forEach(el => el.disabled = true);
+
+    // Oculta o botão de envio
+    const botaoCadastrar = form.querySelector('button[type="submit"]');
+    if (botaoCadastrar) botaoCadastrar.style.display = "none";
+
+    // Opcional: mensagem informativa
+    mensagem.innerText = "🔒 Visualização apenas. Motoristas não podem alterar os dados.";
+  }
+
   function capitalizarTexto(texto) {
     return texto
       .toLowerCase()
