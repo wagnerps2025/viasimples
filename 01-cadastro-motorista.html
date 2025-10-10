@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastro de Motorista</title>
 
+  <!-- Verificação de acesso -->
   <script>
     const usuario = localStorage.getItem("usuario");
     if (usuario !== "admin") {
@@ -93,11 +92,19 @@
       font-size: 14px;
       color: #555;
     }
+
+    #botaoFirebase {
+      background-color: #4CAF50;
+      color: white;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <main class="container">
     <h1>📝 Cadastro de Motorista</h1>
+
+    <button type="button" id="botaoFirebase">✅ Salvar no Firebase</button>
 
     <form id="formMotorista">
       <label for="nome">Nome completo:</label>
@@ -146,17 +153,31 @@
     <div id="contadorMotoristas"></div>
   </main>
 
+  <!-- Firebase compatível com navegador -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <!-- Script principal -->
   <script>
     const form = document.getElementById("formMotorista");
     const mensagem = document.getElementById("mensagemCadastro");
     const contador = document.getElementById("contadorMotoristas");
 
     function capitalizarTexto(texto) {
-      return texto
-        .toLowerCase()
-        .split(" ")
-        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
+      return texto.toLowerCase().split(" ").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
     }
 
     function formatarTelefone(valor) {
@@ -189,20 +210,10 @@
       return String(lista.length + 1);
     }
 
-    document.getElementById("nome").addEventListener("blur", e => {
-      e.target.value = capitalizarTexto(e.target.value);
-    });
-
-    document.getElementById("marca").addEventListener("blur", e => {
-      e.target.value = capitalizarTexto(e.target.value);
-    });
-
-    document.getElementById("modelo").addEventListener("blur", e => {
-      e.target.value = capitalizarTexto(e.target.value);
-    });
-
-    document.getElementById("cor").addEventListener("blur", e => {
-      e.target.value = capitalizarTexto(e.target.value);
+    ["nome", "marca", "modelo", "cor"].forEach(id => {
+      document.getElementById(id).addEventListener("blur", e => {
+        e.target.value = capitalizarTexto(e.target.value);
+      });
     });
 
     document.getElementById("telefone").addEventListener("blur", e => {
@@ -234,9 +245,33 @@
       lista.push(motorista);
       localStorage.setItem("motoristas", JSON.stringify(lista));
 
-      mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
+            mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
       atualizarContador();
       limparFormulario();
+    });
+
+    document.getElementById("botaoFirebase").addEventListener("click", async () => {
+      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+
+      if (lista.length === 0) {
+        alert("⚠️ Nenhum motorista encontrado no localStorage.");
+        return;
+      }
+
+      let sucesso = 0;
+      let falhas = 0;
+
+      for (const motorista of lista) {
+        try {
+          await db.collection("motoristas").add(motorista);
+          sucesso++;
+        } catch (error) {
+          console.error("Erro ao salvar no Firebase:", error);
+          falhas++;
+        }
+      }
+
+      alert(`✅ ${sucesso} motoristas salvos no Firebase.\n❌ ${falhas} falhas.`);
     });
 
     atualizarContador();
