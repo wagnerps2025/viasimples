@@ -21,11 +21,12 @@
   const campoBusca = document.getElementById("campoBusca");
   const tipoBusca = document.getElementById("tipoBusca");
 
-  campoBusca.addEventListener("keyup", filtrarMotoristas);
+  campoBusca?.addEventListener("keyup", filtrarMotoristas);
 
   async function carregarMotoristas() {
-    const locais = JSON.parse(localStorage.getItem("motoristas") || "[]");
-    const listaFinal = [...locais];
+    let locais = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    const placasLocais = locais.map(m => m.placa);
+    let atualizados = [...locais];
 
     try {
       const snapshot = await db.collection("motoristas").get();
@@ -33,22 +34,27 @@
         const dados = doc.data();
         dados.firebaseId = doc.id;
 
-        const duplicado = listaFinal.some(m => m.placa === dados.placa);
-        if (!duplicado) listaFinal.push(dados);
+        const indexLocal = atualizados.findIndex(m => m.placa === dados.placa);
+        if (indexLocal >= 0) {
+          // Atualiza dados locais com os do Firebase
+          atualizados[indexLocal] = { ...dados };
+        } else {
+          atualizados.push(dados);
+        }
       });
 
-      localStorage.setItem("motoristas", JSON.stringify(listaFinal));
+      localStorage.setItem("motoristas", JSON.stringify(atualizados));
     } catch (error) {
-      console.error("Erro ao carregar do Firebase:", error);
+      console.error("⚠️ Erro ao carregar motoristas do Firebase:", error);
     }
 
-    exibirMotoristas(listaFinal);
+    exibirMotoristas(atualizados);
   }
 
   function exibirMotoristas(motoristas) {
     listaContainer.innerHTML = "";
 
-    if (motoristas.length === 0) {
+    if (!motoristas.length) {
       semDados.style.display = "block";
       return;
     }
@@ -61,32 +67,32 @@
 
       card.innerHTML = `
         <label>ID:</label>
-        <input type="text" value="${motorista.id}" id="id-${index}" disabled />
+        <input type="text" value="${motorista.id || ''}" id="id-${index}" disabled />
 
         <label>Nome:</label>
-        <input type="text" value="${motorista.nome}" id="nome-${index}" />
+        <input type="text" value="${motorista.nome || ''}" id="nome-${index}" />
 
         <label>Telefone:</label>
-        <input type="text" value="${motorista.telefone}" id="telefone-${index}" />
+        <input type="text" value="${motorista.telefone || ''}" id="telefone-${index}" />
 
         <label>Marca:</label>
-        <input type="text" value="${motorista.marca}" id="marca-${index}" />
+        <input type="text" value="${motorista.marca || ''}" id="marca-${index}" />
 
         <label>Modelo:</label>
-        <input type="text" value="${motorista.modelo}" id="modelo-${index}" />
+        <input type="text" value="${motorista.modelo || ''}" id="modelo-${index}" />
 
         <label>Ano:</label>
-        <input type="number" value="${motorista.ano}" id="ano-${index}" />
+        <input type="number" value="${motorista.ano || ''}" id="ano-${index}" />
 
         <label>Tipo de Placa:</label>
-        <input type="text" value="${motorista.tipoPlaca}" id="tipoPlaca-${index}" />
+        <input type="text" value="${motorista.tipoPlaca || ''}" id="tipoPlaca-${index}" />
 
         <label>Placa:</label>
-        <input type="text" value="${motorista.placa}" id="placa-${index}" />
+        <input type="text" value="${motorista.placa || ''}" id="placa-${index}" />
 
         <div class="botoes">
-          <button class="editar" onclick="editarMotorista(${index})">Salvar</button>
-          <button class="excluir" onclick="excluirMotorista(${index})">Excluir</button>
+          <button class="editar" onclick="editarMotorista(${index})">💾 Salvar</button>
+          <button class="excluir" onclick="excluirMotorista(${index})">🗑️ Excluir</button>
         </div>
       `;
 
@@ -96,7 +102,6 @@
 
   async function editarMotorista(index) {
     const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
     const motorista = {
       id: document.getElementById(`id-${index}`).value,
       nome: document.getElementById(`nome-${index}`).value.trim(),
@@ -122,9 +127,9 @@
         motoristas[index].firebaseId = ref.id;
         localStorage.setItem("motoristas", JSON.stringify(motoristas));
       }
-      alert("✅ Dados atualizados no Firebase!");
+      alert("✅ Motorista salvo com sucesso!");
     } catch (error) {
-      console.error("Erro ao salvar no Firebase:", error);
+      console.error("❌ Erro ao salvar no Firebase:", error);
     }
 
     carregarMotoristas();
@@ -143,7 +148,7 @@
           await db.collection("motoristas").doc(motorista.firebaseId).delete();
         }
       } catch (error) {
-        console.error("Erro ao excluir do Firebase:", error);
+        console.error("❌ Erro ao excluir do Firebase:", error);
       }
 
       carregarMotoristas();

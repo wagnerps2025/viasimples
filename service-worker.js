@@ -1,14 +1,14 @@
 const CACHE_NAME = "viasimples-cache-v1";
 const FILES_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/style-viasimples.css",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png"
+  "/viasimples/",
+  "/viasimples/index.html",
+  "/viasimples/style-viasimples.css",
+  "/viasimples/main.js",
+  "/viasimples/manifest.json",
+  "/viasimples/icon-192.png",
+  "/viasimples/icon-512.png"
 ];
 
-// Instala e pré-carrega os arquivos no cache com verificação individual
 self.addEventListener("install", event => {
   self.skipWaiting();
   event.waitUntil(
@@ -35,7 +35,6 @@ self.addEventListener("install", event => {
   );
 });
 
-// Ativa e remove caches antigos
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -51,12 +50,11 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
-// Intercepta requisições e responde com cache ou rede
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).catch(() => {
-        return caches.match("/index.html");
+        return caches.match("/viasimples/index.html");
       });
     })
   );
