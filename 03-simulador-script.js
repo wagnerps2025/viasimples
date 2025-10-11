@@ -50,7 +50,8 @@ window.usarLocalizacao = function () {
         }
       });
     },
-    () => {
+    err => {
+      console.error("Erro de geolocalização:", err);
       alert("Não foi possível obter sua localização.");
     },
     { enableHighAccuracy: true, timeout: 10000 }
