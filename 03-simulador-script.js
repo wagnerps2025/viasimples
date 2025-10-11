@@ -5,6 +5,9 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
+// Firebase Firestore (evita redefinir se já existe)
+const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+
 window.initMap = function () {
   mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
     center: { lat: -23.0067, lng: -46.8466 },
@@ -20,15 +23,17 @@ window.initMap = function () {
   const origemInput = document.getElementById("origem");
   const destinoInput = document.getElementById("destino");
 
-  autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
+  if (origemInput && destinoInput) {
+    autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
+      componentRestrictions: { country: "br" },
+      fields: ["formatted_address", "geometry"],
+    });
 
-  autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
+    autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
+      componentRestrictions: { country: "br" },
+      fields: ["formatted_address", "geometry"],
+    });
+  }
 };
 
 window.usarLocalizacao = function () {
@@ -44,7 +49,10 @@ window.usarLocalizacao = function () {
 
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         if (status === "OK" && results[0]) {
-          document.getElementById("origem").value = results[0].formatted_address;
+          const origemInput = document.getElementById("origem");
+          if (origemInput) {
+            origemInput.value = results[0].formatted_address;
+          }
         } else {
           alert("Não foi possível converter coordenadas em endereço.");
         }
@@ -59,8 +67,8 @@ window.usarLocalizacao = function () {
 };
 
 window.calcularCorrida = function () {
-  const origem = document.getElementById("origem").value.trim();
-  const destino = document.getElementById("destino").value.trim();
+  const origem = document.getElementById("origem")?.value.trim();
+  const destino = document.getElementById("destino")?.value.trim();
 
   if (!origem || !destino) {
     alert("Preencha origem e destino.");
@@ -106,19 +114,34 @@ function calcularValor(distanciaKm) {
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
 
-function listarMotoristasAtivos() {
+async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
 
-  const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-  const ativos = motoristas.filter(m => m.ativo);
+  let motoristas = [];
 
-  if (ativos.length === 0) {
+  if (db) {
+    try {
+      const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
+      snapshot.forEach(doc => {
+        motoristas.push(doc.data());
+      });
+    } catch (error) {
+      console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
+    }
+  }
+
+  if (motoristas.length === 0) {
+    const local = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    motoristas = local.filter(m => m.ativo);
+  }
+
+  if (motoristas.length === 0) {
     lista.innerHTML = "<p>Nenhum motorista ativo disponível.</p>";
     return;
   }
 
-  ativos.forEach(motorista => {
+  motoristas.forEach(motorista => {
     const card = document.createElement("div");
     card.className = "motorista-card ativo";
     card.innerHTML = `
@@ -148,15 +171,15 @@ function listarMotoristasAtivos() {
   }
 }
 
-window.enviarParaMotorista = function (telefoneBruto, nomeMotorista) {
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   if (motoristaEmServico) {
     alert("Já existe um motorista em serviço. Cancele antes de chamar outro.");
     return;
   }
 
-  const nomePassageiro = document.getElementById("nomePassageiro").value.trim();
-  const origem = document.getElementById("origem").value.trim();
-  const destino = document.getElementById("destino").value.trim();
+  const nomePassageiro = document.getElementById("nomePassageiro")?.value.trim();
+  const origem = document.getElementById("origem")?.value.trim();
+  const destino = document.getElementById("destino")?.value.trim();
 
   if (!nomePassageiro) {
     alert("Informe seu nome para solicitar a corrida.");
@@ -166,16 +189,42 @@ window.enviarParaMotorista = function (telefoneBruto, nomeMotorista) {
   const numeroLimpo = telefoneBruto.replace(/\D+/g, "");
   const numeroWhatsApp = numeroLimpo.startsWith("55") ? numeroLimpo : "55" + numeroLimpo;
 
-  const linkOrigem = `https://www.google.com/maps/search/?api=1&query=${coordenadasOrigem.lat()},${coordenadasOrigem.lng()}`;
-  const linkDestino = `https://www.google.com/maps/search/?api=1&query=${coordenadasDestino.lat()},${coordenadasDestino.lng()}`;
+  const latOrigem = coordenadasOrigem?.lat?.();
+  const lngOrigem = coordenadasOrigem?.lng?.();
+  const latDestino = coordenadasDestino?.lat?.();
+  const lngDestino = coordenadasDestino?.lng?.();
+
+  const linkOrigem = latOrigem && lngOrigem
+    ? `https://www.google.com/maps/search/?api=1&query=${latOrigem},${lngOrigem}`
+    : "";
+  const linkDestino = latDestino && lngDestino
+    ? `https://www.google.com/maps/search/?api=1&query=${latDestino},${lngDestino}`
+    : "";
 
   const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
 
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
 
-  motoristaEmServico = nomeMotorista;
+    motoristaEmServico = nomeMotorista;
   listarMotoristasAtivos();
+
+  // 🔄 Salva a corrida no Firebase
+  if (db) {
+    try {
+      await db.collection("corridas").add({
+        passageiro: nomePassageiro,
+        motorista: nomeMotorista,
+        origem,
+        destino,
+        valor: valorCorrida,
+        data: new Date().toISOString()
+      });
+      console.log("✅ Corrida registrada no Firebase");
+    } catch (error) {
+      console.error("❌ Erro ao registrar corrida:", error);
+    }
+  }
 };
 
 function cancelarMotorista() {
@@ -185,7 +234,7 @@ function cancelarMotorista() {
 }
 
 window.limparCampos = function () {
-  document.getElementById("formSimulador").reset();
+  document.getElementById("formSimulador")?.reset();
   document.getElementById("resultadoCorrida").innerHTML = "";
   document.getElementById("listaMotoristas").innerHTML = "";
   document.getElementById("botaoLimpar").style.display = "none";
