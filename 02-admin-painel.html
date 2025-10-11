@@ -106,57 +106,94 @@
     </div>
   </main>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const podeEditar = localStorage.getItem("usuario") === "admin";
+    let motoristas = [];
 
-    function carregarMotoristas() {
+    async function carregarMotoristas() {
       const lista = document.getElementById("listaMotoristas");
-      const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
       lista.innerHTML = "";
 
-      if (motoristas.length === 0) {
-        lista.innerHTML = "<p id='semDados'>Nenhum motorista cadastrado.</p>";
-        return;
-      }
+      try {
+        const snapshot = await db.collection("motoristas").get();
+        motoristas = [];
+        snapshot.forEach(doc => {
+          const dados = doc.data();
+          dados.firebaseId = doc.id;
+          motoristas.push(dados);
+        });
 
-      motoristas.forEach((motorista, index) => {
-        const card = document.createElement("div");
-        card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
-
-        let botaoHTML = "";
-        if (podeEditar) {
-          botaoHTML = `
-            <button class="botao-status" onclick="alterarStatus(${index})">
-              ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
-            </button>
-          `;
+        if (motoristas.length === 0) {
+          lista.innerHTML = "<p id='semDados'>Nenhum motorista cadastrado.</p>";
+          return;
         }
 
-        card.innerHTML = `
-          <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
-          <div class="motorista-nome">👤 ${motorista.nome}</div>
-          <div class="motorista-telefone">📞 ${motorista.telefone}</div>
-          <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
-            🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
-          </div>
-          ${botaoHTML}
-        `;
+        motoristas.forEach((motorista, index) => {
+          const card = document.createElement("div");
+          card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
 
-        lista.appendChild(card);
-      });
+          let botaoHTML = "";
+          if (podeEditar) {
+            botaoHTML = `
+              <button class="botao-status" onclick="alterarStatus(${index})">
+                ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
+              </button>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
+            <div class="motorista-nome">👤 ${motorista.nome}</div>
+            <div class="motorista-telefone">📞 ${motorista.telefone}</div>
+            <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
+              🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
+            </div>
+            ${botaoHTML}
+          `;
+
+          lista.appendChild(card);
+        });
+
+        localStorage.setItem("motoristas", JSON.stringify(motoristas));
+      } catch (error) {
+        console.error("Erro ao carregar motoristas:", error);
+        lista.innerHTML = "<p id='semDados'>Erro ao carregar dados.</p>";
+      }
     }
 
-    function alterarStatus(index) {
+    async function alterarStatus(index) {
       if (!podeEditar) return;
 
-      const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-      motoristas[index].ativo = !motoristas[index].ativo;
-      localStorage.setItem("motoristas", JSON.stringify(motoristas));
-      carregarMotoristas();
+      const motorista = motoristas[index];
+      motorista.ativo = !motorista.ativo;
+
+      try {
+        await db.collection("motoristas").doc(motorista.firebaseId).update({ ativo: motorista.ativo });
+        motoristas[index] = motorista;
+        localStorage.setItem("motoristas", JSON.stringify(motoristas));
+        carregarMotoristas();
+      } catch (error) {
+        console.error("Erro ao atualizar status no Firebase:", error);
+        alert("❌ Falha ao salvar status no banco de dados.");
+      }
     }
 
-    carregarMotoristas();
+    window.onload = carregarMotoristas;
   </script>
 </body>
 </html>
