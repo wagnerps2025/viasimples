@@ -1,20 +1,3 @@
-<!-- Firebase compatível com navegador -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
-    authDomain: "viasimples-9d340.firebaseapp.com",
-    projectId: "viasimples-9d340",
-    storageBucket: "viasimples-9d340.appspot.com",
-    messagingSenderId: "372389283187",
-    appId: "1:372389283187:web:139f81f5224bb0958e7106"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
-
 <script>
   const listaContainer = document.getElementById("listaMotoristas");
   const semDados = document.getElementById("semDados");
@@ -25,27 +8,20 @@
 
   async function carregarMotoristas() {
     let locais = JSON.parse(localStorage.getItem("motoristas") || "[]");
-    const placasLocais = locais.map(m => m.placa);
-    let atualizados = [...locais];
+    let atualizados = [];
 
     try {
       const snapshot = await db.collection("motoristas").get();
       snapshot.forEach(doc => {
         const dados = doc.data();
         dados.firebaseId = doc.id;
-
-        const indexLocal = atualizados.findIndex(m => m.placa === dados.placa);
-        if (indexLocal >= 0) {
-          // Atualiza dados locais com os do Firebase
-          atualizados[indexLocal] = { ...dados };
-        } else {
-          atualizados.push(dados);
-        }
+        atualizados.push(dados);
       });
 
       localStorage.setItem("motoristas", JSON.stringify(atualizados));
     } catch (error) {
       console.error("⚠️ Erro ao carregar motoristas do Firebase:", error);
+      atualizados = locais; // fallback local
     }
 
     exibirMotoristas(atualizados);
@@ -140,13 +116,13 @@
     const motorista = motoristas[index];
 
     if (confirm("Deseja realmente excluir este motorista?")) {
-      motoristas.splice(index, 1);
-      localStorage.setItem("motoristas", JSON.stringify(motoristas));
-
       try {
         if (motorista.firebaseId) {
           await db.collection("motoristas").doc(motorista.firebaseId).delete();
         }
+        motoristas.splice(index, 1);
+        localStorage.setItem("motoristas", JSON.stringify(motoristas));
+        alert("🗑️ Motorista excluído com sucesso!");
       } catch (error) {
         console.error("❌ Erro ao excluir do Firebase:", error);
       }
