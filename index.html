@@ -126,17 +126,38 @@
     <div id="mensagem" role="alert" aria-live="polite"></div>
   </main>
 
+  <!-- Firebase compatível com navegador -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-    // Login com senha
-    document.getElementById("formLogin").addEventListener("submit", function(event) {
-      event.preventDefault();
-      autenticarUsuario();
-    });
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    function exibirMensagem(texto, cor) {
+      const msg = document.getElementById("mensagem");
+      msg.textContent = texto;
+      msg.style.color = cor;
+    }
+
+    function mostrarSenha(idCampo) {
+      const campo = document.getElementById(idCampo);
+      campo.type = campo.type === "password" ? "text" : "password";
+    }
 
     function autenticarUsuario() {
       const nome = document.getElementById("nomeAdmin").value.trim();
       const senha = document.getElementById("senhaAdmin").value.trim();
-      const mensagem = document.getElementById("mensagem");
 
       if (!nome || !senha) {
         exibirMensagem("Preencha nome de usuário e senha.", "red");
@@ -160,25 +181,22 @@
       exibirMensagem("❌ Nome ou senha incorretos.", "red");
     }
 
-    // Acesso direto ao simulador
-    document.getElementById("formVisitante").addEventListener("submit", function(event) {
-      event.preventDefault();
+    function acessoVisitante() {
       localStorage.setItem("usuario", "visitante");
       localStorage.setItem("nomeVisitante", "Visitante");
       exibirMensagem("✅ Acesso liberado ao simulador!", "green");
       setTimeout(() => window.location.href = "03-simulador.html", 1000);
+    }
+
+    document.getElementById("formLogin").addEventListener("submit", function(event) {
+      event.preventDefault();
+      autenticarUsuario();
     });
 
-    function mostrarSenha(idCampo) {
-      const campo = document.getElementById(idCampo);
-      campo.type = campo.type === "password" ? "text" : "password";
-    }
-
-    function exibirMensagem(texto, cor) {
-      const msg = document.getElementById("mensagem");
-      msg.textContent = texto;
-      msg.style.color = cor;
-    }
+    document.getElementById("formVisitante").addEventListener("submit", function(event) {
+      event.preventDefault();
+      acessoVisitante();
+    });
   </script>
 </body>
 </html>

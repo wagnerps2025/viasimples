@@ -11,8 +11,6 @@
   <script>
     // Verifica se o usuário está autenticado
     const usuario = localStorage.getItem("usuario");
-
-    // Se não estiver logado, redireciona imediatamente para a tela de login
     if (usuario !== "admin" && usuario !== "motorista" && usuario !== "visitante") {
       window.location.replace("00-login-admin.html");
     }
@@ -90,6 +88,11 @@
 
 <body>
 
+  <div id="splash">
+    <h2>ViaSimples</h2>
+    <p>Carregando...</p>
+  </div>
+
   <main class="container">
     <h1>🚖 Bem-vindo ao ViaSimples</h1>
 
@@ -108,6 +111,23 @@
     <a href="00-login-admin.html"><span>🔑</span>Login</a>
   </nav>
 
+  <!-- Firebase compatível com navegador -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
   <script>
     window.addEventListener("load", () => {
       const splash = document.getElementById("splash");
@@ -116,6 +136,7 @@
         setTimeout(() => splash.style.display = "none", 500);
       }
 
+      // Service Worker para PWA
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("service-worker.js")
           .then(() => console.log("✅ Service Worker registrado"))
@@ -127,7 +148,6 @@
 
       document.querySelectorAll("a[href]").forEach(link => {
         const href = link.getAttribute("href");
-
         const acessoLivre = href.includes("03-simulador") || href.includes("00-login");
         const acessoRestrito = href.includes("01-cadastro") || href.includes("02-admin") || href.includes("gerenciar");
 
@@ -139,27 +159,23 @@
           });
         }
       });
+
+      // (Opcional) Registrar presença no Firebase
+      const nome = localStorage.getItem("nomeVisitante") || "Usuário";
+      const perfil = localStorage.getItem("usuario");
+
+      if (perfil) {
+        db.collection("acessos").add({
+          nome: nome,
+          perfil: perfil,
+          timestamp: new Date().toISOString()
+        }).then(() => {
+          console.log("✅ Acesso registrado no Firebase");
+        }).catch(err => {
+          console.warn("⚠️ Falha ao registrar acesso:", err);
+        });
+      }
     });
-	
-	<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "XXXXXXXXXXXX",
-    appId: "APP_ID"
-  };
-
-  // Inicializa Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
-
-
+  </script>
 </body>
 </html>
