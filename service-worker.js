@@ -3,7 +3,7 @@ const FILES_TO_CACHE = [
   "/viasimples/",
   "/viasimples/index.html",
   "/viasimples/style-viasimples.css",
-  "/viasimples/main.js",
+  "/viasimples/03-simulador-script.js",
   "/viasimples/manifest.json",
   "/viasimples/icon-192.png",
   "/viasimples/icon-512.png"
