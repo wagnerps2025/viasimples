@@ -1,12 +1,12 @@
 const CACHE_NAME = "viasimples-cache-v1";
 const FILES_TO_CACHE = [
-  "/viasimples/",
-  "/viasimples/index.html",
-  "/viasimples/style-viasimples.css",
-  "/viasimples/03-simulador-script.js",
-  "/viasimples/manifest.json",
-  "/viasimples/icon-192.png",
-  "/viasimples/icon-512.png"
+  "/",
+  "/index.html",
+  "/style-viasimples.css",
+  "/03-simulador-script.js",
+  "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png"
 ];
 
 // ✅ Instalação do Service Worker
@@ -47,7 +47,7 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).catch(() => {
-        return caches.match("/viasimples/index.html");
+        return caches.match("/index.html");
       });
     })
   );
