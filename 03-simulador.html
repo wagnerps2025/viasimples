@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
-
-  <!-- Estilos principais -->
   <link rel="stylesheet" href="style-viasimples.css" />
 </head>
 
@@ -15,33 +13,13 @@
 
     <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
       <label for="nomePassageiro">👤 Seu nome completo:</label>
-      <input
-        type="text"
-        id="nomePassageiro"
-        name="nomePassageiro"
-        required
-        autocomplete="name"
-        placeholder="Ex: Wagner Oliveira"
-      />
+      <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira" />
 
       <label for="origem">📍 Local de partida:</label>
-      <input
-        type="text"
-        id="origem"
-        name="origem"
-        autocomplete="off"
-        placeholder="Digite ou use localização atual"
-      />
+      <input type="text" id="origem" name="origem" autocomplete="off" placeholder="Digite ou use localização atual" />
 
       <label for="destino">🎯 Destino final:</label>
-      <input
-        type="text"
-        id="destino"
-        name="destino"
-        required
-        autocomplete="off"
-        placeholder="Ex: Av. Paulista, São Paulo"
-      />
+      <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
 
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
@@ -68,18 +46,11 @@
       messagingSenderId: "372389283187",
       appId: "1:372389283187:web:139f81f5224bb0958e7106"
     };
-
     firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore(); // define global db para evitar conflitos
+    window.db = firebase.firestore();
   </script>
 
-  <!-- Script principal -->
   <script src="03-simulador-script.js"></script>
-
-  <!-- Google Maps API com Places -->
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap"
-    async defer
-  ></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>

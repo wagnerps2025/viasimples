@@ -5,8 +5,21 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-// Firebase Firestore (evita redefinir se já existe)
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
+  if (corrida) {
+    motoristaEmServico = corrida.motorista;
+    document.getElementById("resultadoCorrida").innerHTML = `
+      🚧 Corrida ativa com ${corrida.motorista}<br>
+      📍 Origem: ${corrida.origem}<br>
+      🎯 Destino: ${corrida.destino}<br>
+      💰 Valor: R$ ${corrida.valor.toFixed(2)}
+    `;
+    listarMotoristasAtivos();
+  }
+});
 
 window.initMap = function () {
   mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
@@ -49,10 +62,7 @@ window.usarLocalizacao = function () {
 
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         if (status === "OK" && results[0]) {
-          const origemInput = document.getElementById("origem");
-          if (origemInput) {
-            origemInput.value = results[0].formatted_address;
-          }
+          document.getElementById("origem").value = results[0].formatted_address;
         } else {
           alert("Não foi possível converter coordenadas em endereço.");
         }
@@ -67,6 +77,11 @@ window.usarLocalizacao = function () {
 };
 
 window.calcularCorrida = function () {
+  if (localStorage.getItem("corridaAtiva")) {
+    alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
+    return;
+  }
+
   const origem = document.getElementById("origem")?.value.trim();
   const destino = document.getElementById("destino")?.value.trim();
 
@@ -123,9 +138,7 @@ async function listarMotoristasAtivos() {
   if (db) {
     try {
       const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
-      snapshot.forEach(doc => {
-        motoristas.push(doc.data());
-      });
+      snapshot.forEach(doc => motoristas.push(doc.data()));
     } catch (error) {
       console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
     }
@@ -154,7 +167,7 @@ async function listarMotoristasAtivos() {
       <div>🎨 Cor: ${motorista.cor}</div>
       <div>📞 Telefone: ${motorista.telefone}</div>
       ${
-        motoristaEmServico
+        motoristaEmServico === motorista.nome
           ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
           : `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
       }
@@ -164,16 +177,27 @@ async function listarMotoristasAtivos() {
 
   if (motoristaEmServico) {
     const cancelarBtn = document.createElement("button");
-    cancelarBtn.textContent = "❌ Cancelar motorista";
-    cancelarBtn.style = "margin-top: 20px; background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer;";
+    cancelarBtn.textContent = "❌ Cancelar corrida";
+    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+
+    const finalizarBtn = document.createElement("button");
+    finalizarBtn.textContent = "✅ Finalizar corrida";
+    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+
     cancelarBtn.onclick = cancelarMotorista;
-    lista.appendChild(cancelarBtn);
+    finalizarBtn.onclick = finalizarCorrida;
+
+    const grupoBotoes = document.createElement("div");
+    grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap;";
+    grupoBotoes.appendChild(cancelarBtn);
+    grupoBotoes.appendChild(finalizarBtn);
+    lista.appendChild(grupoBotoes);
   }
 }
 
 window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
-  if (motoristaEmServico) {
-    alert("Já existe um motorista em serviço. Cancele antes de chamar outro.");
+  if (localStorage.getItem("corridaAtiva")) {
+    alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
   }
 
@@ -194,7 +218,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   const latDestino = coordenadasDestino?.lat?.();
   const lngDestino = coordenadasDestino?.lng?.();
 
-  const linkOrigem = latOrigem && lngOrigem
+    const linkOrigem = latOrigem && lngOrigem
     ? `https://www.google.com/maps/search/?api=1&query=${latOrigem},${lngOrigem}`
     : "";
   const linkDestino = latDestino && lngDestino
@@ -202,14 +226,19 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     : "";
 
   const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
-
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
 
-    motoristaEmServico = nomeMotorista;
+  motoristaEmServico = nomeMotorista;
+  localStorage.setItem("corridaAtiva", JSON.stringify({
+    motorista: nomeMotorista,
+    passageiro: nomePassageiro,
+    origem,
+    destino,
+    valor: valorCorrida
+  }));
   listarMotoristasAtivos();
 
-  // 🔄 Salva a corrida no Firebase
   if (db) {
     try {
       await db.collection("corridas").add({
@@ -229,8 +258,30 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
 
 function cancelarMotorista() {
   motoristaEmServico = null;
+  localStorage.removeItem("corridaAtiva");
   listarMotoristasAtivos();
-  alert("Motorista cancelado com sucesso.");
+  document.getElementById("resultadoCorrida").innerHTML = "❌ Corrida cancelada.";
+}
+
+function finalizarCorrida() {
+  const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
+  if (!corrida) return;
+
+  if (db) {
+    db.collection("motoristas")
+      .where("nome", "==", corrida.motorista)
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          doc.ref.update({ status: "disponível" });
+        });
+      });
+  }
+
+  localStorage.removeItem("corridaAtiva");
+  motoristaEmServico = null;
+  listarMotoristasAtivos();
+  document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
 
 window.limparCampos = function () {
@@ -240,5 +291,5 @@ window.limparCampos = function () {
   document.getElementById("botaoLimpar").style.display = "none";
   directionsRenderer.setDirections({ routes: [] });
   motoristaEmServico = null;
+  localStorage.removeItem("corridaAtiva");
 };
-
