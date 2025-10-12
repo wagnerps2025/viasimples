@@ -47,7 +47,6 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).catch(() => {
-        // Fallback para index.html em caso de falha offline
         return caches.match("/viasimples/index.html");
       });
     })
