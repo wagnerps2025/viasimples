@@ -1,7 +1,7 @@
 {
   "name": "ViaSimples",
   "short_name": "ViaSimples",
-  "start_url": "/viasimples/",
+  "start_url": "/index/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FFD600",
@@ -21,3 +21,4 @@
     }
   ]
 }
+
