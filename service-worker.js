@@ -9,8 +9,11 @@ const FILES_TO_CACHE = [
   "/viasimples/icon-512.png"
 ];
 
+// Instalação do Service Worker
 self.addEventListener("install", event => {
+  console.log("✅ Service Worker instalado");
   self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
       const validFiles = [];
@@ -35,7 +38,10 @@ self.addEventListener("install", event => {
   );
 });
 
+// Ativação do Service Worker
 self.addEventListener("activate", event => {
+  console.log("🚀 Service Worker ativado");
+
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
@@ -47,28 +53,19 @@ self.addEventListener("activate", event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
+// Interceptação de requisições
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
+      // Retorna do cache ou faz fetch da rede
       return response || fetch(event.request).catch(() => {
+        // Fallback para index.html em caso de falha
         return caches.match("/viasimples/index.html");
       });
     })
   );
-});
-
-self.addEventListener("install", event => {
-  console.log("✅ Service Worker instalado");
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", event => {
-  console.log("🚀 Service Worker ativado");
-});
-
-self.addEventListener("fetch", event => {
-  event.respondWith(fetch(event.request));
 });
