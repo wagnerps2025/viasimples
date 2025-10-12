@@ -1,7 +1,7 @@
-// Firebase Firestore (assume que firebase já foi inicializado no HTML)
+// ✅ Firebase Firestore (assume que firebase já foi inicializado no HTML)
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-// Elementos da interface
+// ✅ Elementos da interface
 const listaContainer = document.getElementById("listaMotoristas");
 const semDados = document.getElementById("semDados");
 const campoBusca = document.getElementById("campoBusca");
@@ -12,7 +12,6 @@ campoBusca?.addEventListener("keyup", filtrarMotoristas);
 // 🔄 Carrega motoristas do Firebase e sincroniza com localStorage
 async function carregarMotoristas() {
   let locais = JSON.parse(localStorage.getItem("motoristas") || "[]");
-  const placasLocais = locais.map(m => m.placa);
   let atualizados = [...locais];
 
   try {
@@ -30,11 +29,11 @@ async function carregarMotoristas() {
     });
 
     localStorage.setItem("motoristas", JSON.stringify(atualizados));
+    exibirMotoristas(atualizados);
   } catch (error) {
     console.error("⚠️ Erro ao carregar motoristas do Firebase:", error);
+    exibirMotoristas(locais); // fallback local
   }
-
-  exibirMotoristas(atualizados);
 }
 
 // 🧾 Exibe motoristas na interface de administração
@@ -50,7 +49,7 @@ function exibirMotoristas(motoristas) {
 
   motoristas.forEach((motorista, index) => {
     const card = document.createElement("div");
-    card.className = "motorista-card";
+    card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
 
     card.innerHTML = `
       <label>ID:</label>
@@ -125,6 +124,7 @@ async function editarMotorista(index) {
     alert("✅ Motorista salvo com sucesso!");
   } catch (error) {
     console.error("❌ Erro ao salvar no Firebase:", error);
+    alert("❌ Falha ao salvar no banco de dados.");
   }
 
   carregarMotoristas();
@@ -135,7 +135,7 @@ async function excluirMotorista(index) {
   const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
   const motorista = motoristas[index];
 
-  if (confirm("Deseja realmente excluir este motorista?")) {
+  if (confirm(`Deseja realmente excluir o motorista ${motorista.nome}?`)) {
     motoristas.splice(index, 1);
     localStorage.setItem("motoristas", JSON.stringify(motoristas));
 
@@ -145,6 +145,7 @@ async function excluirMotorista(index) {
       }
     } catch (error) {
       console.error("❌ Erro ao excluir do Firebase:", error);
+      alert("❌ Falha ao excluir no banco de dados.");
     }
 
     carregarMotoristas();

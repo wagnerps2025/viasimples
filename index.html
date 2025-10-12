@@ -4,14 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ViaSimples - Acesso ao Sistema</title>
-
-  <!-- Estilo principal -->
   <link rel="stylesheet" href="style-viasimples.css" />
-
-  <!-- PWA Manifesto e tema -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#FFD600" />
-
   <style>
     body {
       display: flex;
@@ -203,17 +196,6 @@
     document.getElementById("formVisitante").addEventListener("submit", function(event) {
       event.preventDefault();
       acessoVisitante();
-    });
-
-    // ✅ Service Worker para PWA
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js")
-        .then(() => console.log("✅ Service Worker registrado"))
-        .catch(err => console.error("❌ Erro ao registrar Service Worker:", err));
-    }
-
-    window.addEventListener("appinstalled", () => {
-      console.log("📲 App ViaSimples instalado com sucesso!");
     });
   </script>
 </body>
