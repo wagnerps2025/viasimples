@@ -180,5 +180,33 @@
       }
     });
   </script>
+  
+  <script>
+  // Força recarregamento limpo no GitHub Pages
+  if (location.hostname.includes("github.io")) {
+    console.log("🔄 Executando verificação de ambiente GitHub Pages");
+
+    // Verifica se recursos essenciais estão carregados
+    const scripts = [
+      "firebase-app-compat.js",
+      "firebase-firestore-compat.js",
+      "03-simulador-script.js"
+    ];
+
+    scripts.forEach(src => {
+      const found = [...document.scripts].some(s => s.src.includes(src));
+      if (!found) {
+        console.warn(`⚠️ Script não carregado: ${src}`);
+      }
+    });
+
+    // Força recarregamento se necessário
+    if (!localStorage.getItem("githubDesbloqueado")) {
+      localStorage.setItem("githubDesbloqueado", "true");
+      location.reload(true); // força reload completo
+    }
+  }
+</script>
+
 </body>
 </html>
