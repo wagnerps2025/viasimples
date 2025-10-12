@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ViaSimples - Acesso ao Sistema</title>
+
   <link rel="stylesheet" href="style-viasimples.css" />
+  <link rel="manifest" href="manifest.json" />
+
   <style>
     body {
       display: flex;
@@ -101,11 +104,11 @@
     <!-- Login com senha -->
     <form id="formLogin" autocomplete="off">
       <label for="nomeAdmin">👤 Nome de usuário:</label>
-      <input type="text" id="nomeAdmin" required />
+      <input type="text" id="nomeAdmin" aria-label="Nome de usuário" required />
 
       <label for="senhaAdmin">🔒 Senha:</label>
       <div class="senha-container">
-        <input type="password" id="senhaAdmin" required />
+        <input type="password" id="senhaAdmin" aria-label="Senha" required />
         <span class="toggle-olho" onclick="mostrarSenha('senhaAdmin')">👁️</span>
       </div>
 
@@ -126,7 +129,7 @@
     <div id="mensagem" role="alert" aria-live="polite"></div>
   </main>
 
-  <!-- Firebase compatível com navegador -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -143,6 +146,7 @@
     const db = firebase.firestore();
   </script>
 
+  <!-- Funções de login -->
   <script>
     function exibirMensagem(texto, cor) {
       const msg = document.getElementById("mensagem");
@@ -188,43 +192,46 @@
       setTimeout(() => window.location.href = "03-simulador.html", 1000);
     }
 
-    document.getElementById("formLogin").addEventListener("submit", function(event) {
-      event.preventDefault();
+    document.getElementById("formLogin").addEventListener("submit", e => {
+      e.preventDefault();
       autenticarUsuario();
     });
 
-    document.getElementById("formVisitante").addEventListener("submit", function(event) {
-      event.preventDefault();
+    document.getElementById("formVisitante").addEventListener("submit", e => {
+      e.preventDefault();
       acessoVisitante();
     });
   </script>
-  
+
+  <!-- Service Worker + GitHub Pages -->
   <script>
-  // Força recarregamento limpo no GitHub Pages
-  if (location.hostname.includes("github.io")) {
-    console.log("🔄 Executando verificação de ambiente GitHub Pages");
-
-    // Verifica se recursos essenciais estão carregados
-    const scripts = [
-      "firebase-app-compat.js",
-      "firebase-firestore-compat.js",
-      "03-simulador-script.js"
-    ];
-
-    scripts.forEach(src => {
-      const found = [...document.scripts].some(s => s.src.includes(src));
-      if (!found) {
-        console.warn(`⚠️ Script não carregado: ${src}`);
-      }
-    });
-
-    // Força recarregamento se necessário
-    if (!localStorage.getItem("githubDesbloqueado")) {
-      localStorage.setItem("githubDesbloqueado", "true");
-      location.reload(true); // força reload completo
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker registrado"))
+        .catch(err => console.error("❌ Erro ao registrar Service Worker", err));
     }
-  }
-</script>
 
+    if (location.hostname.includes("github.io")) {
+      console.log("🔄 Ambiente GitHub Pages detectado");
+
+      const scripts = [
+        "firebase-app-compat.js",
+        "firebase-firestore-compat.js",
+        "03-simulador-script.js"
+      ];
+
+      scripts.forEach(src => {
+        const found = [...document.scripts].some(s => s.src.includes(src));
+        if (!found) {
+          console.warn(`⚠️ Script não carregado: ${src}`);
+        }
+      });
+
+      if (!localStorage.getItem("githubDesbloqueado")) {
+        localStorage.setItem("githubDesbloqueado", "true");
+        location.reload(true);
+      }
+    }
+  </script>
 </body>
 </html>

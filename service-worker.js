@@ -9,6 +9,7 @@ const FILES_TO_CACHE = [
   "/viasimples/icon-512.png"
 ];
 
+// Instala o Service Worker e pré-carrega os arquivos essenciais
 self.addEventListener("install", event => {
   self.skipWaiting();
   event.waitUntil(
@@ -35,6 +36,7 @@ self.addEventListener("install", event => {
   );
 });
 
+// Ativa o Service Worker e limpa caches antigos
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -50,11 +52,15 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
+// Intercepta requisições e responde com cache ou rede
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).catch(() => {
-        return caches.match("/viasimples/index.html");
+        // Fallback para página inicial offline
+        if (event.request.mode === "navigate") {
+          return caches.match("/viasimples/index.html");
+        }
       });
     })
   );
