@@ -241,3 +241,4 @@ window.limparCampos = function () {
   directionsRenderer.setDirections({ routes: [] });
   motoristaEmServico = null;
 };
+
