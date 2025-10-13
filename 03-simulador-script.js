@@ -304,3 +304,4 @@ function finalizarCorrida() {
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
+
