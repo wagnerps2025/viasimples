@@ -96,6 +96,37 @@ window.usarLocalizacao = function () {
   );
 };
 
+// 🔄 Atualiza configurações no banco e localStorage
+async function atualizarConfiguracoesCorrida(taxaMinima, valorPorKm) {
+  const novasConfig = {
+    taxaMinima: parseFloat(taxaMinima),
+    valorPorKm: parseFloat(valorPorKm),
+  };
+
+  // Atualiza localStorage
+  localStorage.setItem("configuracoesCorrida", JSON.stringify(novasConfig));
+
+  // Atualiza no banco de dados via API
+  try {
+    await fetch("/api/configuracoesCorrida", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(novasConfig),
+    });
+    console.log("Configurações atualizadas com sucesso.");
+  } catch (error) {
+    console.error("Erro ao atualizar configurações no banco:", error);
+  }
+}
+
+// 💰 Calcula valor da corrida com dados atualizados
+function calcularValor(distanciaKm) {
+  const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
+  const taxaMinima = config.taxaMinima ?? 15.00;
+  const valorPorKm = config.valorPorKm ?? 7.00;
+  return Math.max(taxaMinima, distanciaKm * valorPorKm);
+}
+
 // 🚗 Calcula rota e valor
 window.calcularCorrida = function () {
   if (localStorage.getItem("corridaAtiva")) {
@@ -143,13 +174,18 @@ window.calcularCorrida = function () {
   });
 };
 
-// 💰 Calcula valor da corrida
-function calcularValor(distanciaKm) {
-  const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
-  const taxaMinima = config.taxaMinima || 15.00;
-  const valorPorKm = config.valorPorKm || 7;
-  return Math.max(taxaMinima, distanciaKm * valorPorKm);
-}
+// 📝 Exemplo de uso: atualizando valores dinamicamente
+document.getElementById("taxaMinima").addEventListener("change", (e) => {
+  const taxa = e.target.value;
+  const valorKm = document.getElementById("valorPorKm").value;
+  atualizarConfiguracoesCorrida(taxa, valorKm);
+});
+
+document.getElementById("valorPorKm").addEventListener("change", (e) => {
+  const valorKm = e.target.value;
+  const taxa = document.getElementById("taxaMinima").value;
+  atualizarConfiguracoesCorrida(taxa, valorKm);
+});
 
 // 📋 Lista motoristas ativos
 async function listarMotoristasAtivos() {
@@ -304,5 +340,6 @@ function finalizarCorrida() {
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
+
 
 
