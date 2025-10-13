@@ -125,7 +125,7 @@ window.calcularCorrida = function () {
 
 function calcularValor(distanciaKm) {
   const taxaMinima = 15.00;
-  const valorPorKm = 3.90;
+  const valorPorKm = 7.00;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
 
