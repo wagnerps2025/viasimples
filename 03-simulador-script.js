@@ -242,7 +242,7 @@ window.usarLocalizacao = function () {
 function calcularValor(distanciaKm) {
   const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
   const taxaMinima = config.taxaMinima ?? 20.00;
-  const valorPorKm = config.valorPorKm ?? 7.00;
+  const valorPorKm = config.valorPorKm ?? 8.00;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
 
@@ -410,3 +410,4 @@ window.limparCampos = function () {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
+
