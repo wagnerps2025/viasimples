@@ -122,7 +122,7 @@ async function atualizarConfiguracoesCorrida(taxaMinima, valorPorKm) {
 // 💰 Calcula valor da corrida com dados atualizados
 function calcularValor(distanciaKm) {
   const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
-  const taxaMinima = config.taxaMinima ?? 15.00;
+  const taxaMinima = config.taxaMinima ?? 20.00;
   const valorPorKm = config.valorPorKm ?? 7.00;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
@@ -340,6 +340,7 @@ function finalizarCorrida() {
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
+
 
 
 
