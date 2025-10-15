@@ -1,109 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Motoristas - ViaSimples</title>
-  <link rel="stylesheet" href="style-viasimples.css">
-
-  <style>
-    .motorista-card {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      transition: background-color 0.3s ease;
-    }
-
-    .motorista-card.ativo {
-      background-color: #E3F2FD;
-    }
-
-    .motorista-card.inativo {
-      background-color: #EEEEEE;
-    }
-
-    .motorista-id {
-      font-size: 13px;
-      font-weight: bold;
-      color: #666;
-      margin-bottom: 8px;
-    }
-
-    .motorista-nome {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .motorista-telefone {
-      font-size: 16px;
-      margin-bottom: 6px;
-    }
-
-    .motorista-status {
-      font-size: 15px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-
-    .motorista-status.ativo {
-      color: #2E7D32;
-    }
-
-    .motorista-status.inativo {
-      color: #C62828;
-    }
-
-    .botao-status {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      background-color: #FFD600;
-      color: #000;
-    }
-
-    .botao-status:hover {
-      background-color: #FFC400;
-    }
-
-    #semDados {
-      text-align: center;
-      font-weight: bold;
-      color: #666;
-      margin-top: 40px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Corrida - ViaSimples</title>
+  <link rel="stylesheet" href="style-viasimples.css" />
 </head>
 
 <body>
-  <script>
-    const usuario = localStorage.getItem("usuario");
-
-    if (usuario !== "motorista" && usuario !== "admin") {
-      document.write(`
-        <main style="text-align:center; padding:60px; font-family:sans-serif;">
-          <h2>🔒 Acesso restrito</h2>
-          <p>Você precisa estar autenticado como <strong>administrador</strong> ou <strong>motorista</strong> para visualizar esta página.</p>
-          <p>Redirecionando para login...</p>
-        </main>
-      `);
-      setTimeout(() => {
-        window.location.href = "00-login-admin.html";
-      }, 2000);
-    }
-  </script>
-
   <main class="container">
-    <h1>Painel de Motoristas</h1>
+    <h1>Simule sua corrida</h1>
 
-    <section id="listaMotoristas" aria-label="Lista de motoristas cadastrados"></section>
+    <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
+      <label for="nomePassageiro">👤 Seu nome completo:</label>
+      <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira" />
 
-    <div class="botoes">
-      <button type="button" onclick="carregarMotoristas()">🔄 Atualizar lista</button>
-    </div>
+      <label for="origem">📍 Local de partida:</label>
+      <input type="text" id="origem" name="origem" autocomplete="off" placeholder="Digite ou use localização atual" />
+
+      <label for="destino">🎯 Destino final:</label>
+      <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
+
+      <div class="botoes">
+        <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
+        <button type="submit">🚗 Calcular corrida</button>
+        <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
+        <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+      </div>
+    </form>
+
+    <div id="mapaGoogle"></div>
+    <div id="resultadoCorrida" role="region" aria-live="polite"></div>
+    <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
   </main>
 
   <!-- Firebase SDK -->
@@ -118,83 +46,17 @@
       messagingSenderId: "372389283187",
       appId: "1:372389283187:web:139f81f5224bb0958e7106"
     };
-
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    window.db = firebase.firestore();
+  </script>
 
-    const podeEditar = localStorage.getItem("usuario") === "admin";
-    let motoristas = [];
+  <!-- Simulador JS -->
+  <script src="03-simulador-script.js"></script>
 
-    async function carregarMotoristas() {
-      const lista = document.getElementById("listaMotoristas");
-      lista.innerHTML = "";
-
-      try {
-        const snapshot = await db.collection("motoristas").get();
-        motoristas = [];
-        snapshot.forEach(doc => {
-          const dados = doc.data();
-          dados.firebaseId = doc.id;
-          motoristas.push(dados);
-        });
-
-        if (motoristas.length === 0) {
-          lista.innerHTML = "<p id='semDados'>Nenhum motorista cadastrado.</p>";
-          return;
-        }
-
-        motoristas.forEach((motorista, index) => {
-          const card = document.createElement("div");
-          card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
-
-          let botaoHTML = "";
-          if (podeEditar) {
-            botaoHTML = `
-              <button class="botao-status" onclick="alterarStatus(${index})">
-                ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
-              </button>
-            `;
-          }
-
-          card.innerHTML = `
-            <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
-            <div class="motorista-nome">👤 ${motorista.nome}</div>
-            <div class="motorista-telefone">📞 ${motorista.telefone}</div>
-            <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
-              🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
-            </div>
-            ${botaoHTML}
-          `;
-
-          lista.appendChild(card);
-        });
-
-        localStorage.setItem("motoristas", JSON.stringify(motoristas));
-      } catch (error) {
-        console.error("Erro ao carregar motoristas:", error);
-        lista.innerHTML = "<p id='semDados'>Erro ao carregar dados.</p>";
-      }
-    }
-
-    async function alterarStatus(index) {
-      if (!podeEditar) return;
-
-      const motorista = motoristas[index];
-      motorista.ativo = !motorista.ativo;
-
-      try {
-        await db.collection("motoristas").doc(motorista.firebaseId).update({ ativo: motorista.ativo });
-        motoristas[index] = motorista;
-        localStorage.setItem("motoristas", JSON.stringify(motoristas));
-        carregarMotoristas();
-      } catch (error) {
-        console.error("Erro ao atualizar status no Firebase:", error);
-        alert("❌ Falha ao salvar status no banco de dados.");
-      }
-    }
-
-    window.onload = carregarMotoristas;
+  <!-- Google Maps API com carregamento otimizado -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async"
+    async defer>
   </script>
 </body>
 </html>
-
