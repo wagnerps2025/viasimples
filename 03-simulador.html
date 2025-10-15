@@ -50,7 +50,13 @@
     window.db = firebase.firestore();
   </script>
 
+  <!-- Scripts do simulador -->
   <script src="03-simulador-script.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
+
+  <!-- Google Maps API com carregamento otimizado -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async"
+    async defer>
+  </script>
 </body>
 </html>
