@@ -1,15 +1,19 @@
 // 🔄 Escuta atualizações em tempo real das configurações no Firebase
-function escutarConfiguracoesCorrida() {
+async function carregarConfiguracoesCorridaFirebase() {
   if (!db) return;
 
-  db.collection("configuracoes").doc("valoresPadrao").onSnapshot((doc) => {
+  try {
+    const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
     if (doc.exists) {
       const config = doc.data();
       localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
-      console.log("🔁 Configurações atualizadas em tempo real:", config);
+      console.log("📦 Configurações carregadas do Firebase:", config);
     }
-  });
+  } catch (error) {
+    console.error("❌ Erro ao carregar configurações:", error);
+  }
 }
+
 
 let mapaGoogle, directionsService, directionsRenderer;
 let autocompleteOrigem, autocompleteDestino;
@@ -20,8 +24,10 @@ let motoristaEmServico = null;
 
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-document.addEventListener("DOMContentLoaded", () => {
-  escutarConfiguracoesCorrida(); // ← ativa escuta em tempo real
+document.addEventListener("DOMContentLoaded", async () => {
+  await carregarConfiguracoesCorridaFirebase(); // ← busca única, sem escuta
+  // ... restante do código
+});
 
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
