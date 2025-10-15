@@ -24,10 +24,12 @@ let motoristaEmServico = null;
 
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await carregarConfiguracoesCorridaFirebase(); // ← busca única, sem escuta
-  // ... restante do código
+document.addEventListener("DOMContentLoaded", () => {
+  iniciarSimulador(); // chama a função assíncrona
 });
+
+async function iniciarSimulador() {
+  await carregarConfiguracoesCorridaFirebase(); // ← busca única, sem escuta
 
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
@@ -40,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
     listarMotoristasAtivos();
   }
-});
+}
 
 
 window.initMap = function () {
