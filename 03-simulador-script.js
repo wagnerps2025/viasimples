@@ -1,3 +1,16 @@
+// 🔄 Escuta atualizações em tempo real das configurações no Firebase
+function escutarConfiguracoesCorrida() {
+  if (!db) return;
+
+  db.collection("configuracoes").doc("valoresPadrao").onSnapshot((doc) => {
+    if (doc.exists) {
+      const config = doc.data();
+      localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
+      console.log("🔁 Configurações atualizadas em tempo real:", config);
+    }
+  });
+}
+
 let mapaGoogle, directionsService, directionsRenderer;
 let autocompleteOrigem, autocompleteDestino;
 let coordenadasOrigem = null;
@@ -8,6 +21,8 @@ let motoristaEmServico = null;
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
 document.addEventListener("DOMContentLoaded", () => {
+  escutarConfiguracoesCorrida(); // ← ativa escuta em tempo real
+
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
     motoristaEmServico = corrida.motorista;
@@ -20,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     listarMotoristasAtivos();
   }
 });
+
 
 window.initMap = function () {
   mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
@@ -123,11 +139,14 @@ window.calcularCorrida = function () {
   });
 };
 
+// 💰 Calcula valor da corrida com base nas configurações do Firebase
 function calcularValor(distanciaKm) {
-  const taxaMinima = 15.00;
-  const valorPorKm = 7.00;
+  const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
+  const taxaMinima = typeof config.taxaMinima === "number" ? config.taxaMinima : 20;
+  const valorPorKm = typeof config.valorPorKm === "number" ? config.valorPorKm : 6;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
+
 
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
