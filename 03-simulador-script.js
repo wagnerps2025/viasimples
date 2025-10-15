@@ -7,10 +7,7 @@ let motoristaEmServico = null;
 
 const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-// 🚀 Ao carregar a página
-document.addEventListener("DOMContentLoaded", async () => {
-  await carregarConfiguracoesCorrida();
-
+document.addEventListener("DOMContentLoaded", () => {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
     motoristaEmServico = corrida.motorista;
@@ -24,25 +21,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// 🔧 Carrega configurações atualizadas do Firebase
-async function carregarConfiguracoesCorrida() {
-  if (db) {
-    try {
-      const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
-      if (doc.exists) {
-        const config = doc.data();
-        localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
-        console.log("✅ Configurações carregadas do Firebase:", config);
-      } else {
-        console.warn("⚠️ Configurações não encontradas no Firebase.");
-      }
-    } catch (error) {
-      console.error("❌ Erro ao buscar configurações:", error);
-    }
-  }
-}
-
-// 🗺️ Inicializa o mapa
 window.initMap = function () {
   mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
     center: { lat: -23.0067, lng: -46.8466 },
@@ -58,18 +36,19 @@ window.initMap = function () {
   const origemInput = document.getElementById("origem");
   const destinoInput = document.getElementById("destino");
 
-  autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
+  if (origemInput && destinoInput) {
+    autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
+      componentRestrictions: { country: "br" },
+      fields: ["formatted_address", "geometry"],
+    });
 
-  autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
+    autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
+      componentRestrictions: { country: "br" },
+      fields: ["formatted_address", "geometry"],
+    });
+  }
 };
 
-// 📍 Usa localização atual
 window.usarLocalizacao = function () {
   if (!navigator.geolocation) {
     alert("Seu navegador não suporta geolocalização.");
@@ -91,165 +70,15 @@ window.usarLocalizacao = function () {
     },
     err => {
       console.error("Erro de geolocalização:", err);
-      switch (err.code) {
-        case 1: alert("Permissão de localização negada."); break;
-        case 2: alert("Localização indisponível."); break;
-        case 3: alert("Tempo de resposta excedido."); break;
-        default: alert("Erro ao obter localização.");
-      }
+      alert("Não foi possível obter sua localização.");
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
 };
 
-// 🔄 Atualiza configurações no banco e localStorage
-async function atualizarConfiguracoesCorrida(taxaMinima, valorPorKm) {
-  const novasConfig = {
-    taxaMinima: parseFloat(taxaMinima),
-    valorPorKm: parseFloat(valorPorKm),
-  };
-
-  localStorage.setItem("configuracoesCorrida", JSON.stringify(novasConfig));
-
-  if (db) {
-    try {
-      await db.collection("configuracoes").doc("valoresPadrao").set(novasConfig);
-      console.log("✅ Configurações atualizadas no Firebase");
-    } catch (error) {
-      console.error("❌ Erro ao atualizar configurações no Firebase:", error);
-    }
-  }
-}
-let mapaGoogle, directionsService, directionsRenderer;
-let autocompleteOrigem, autocompleteDestino;
-let coordenadasOrigem = null;
-let coordenadasDestino = null;
-let valorCorrida = 0;
-let motoristaEmServico = null;
-
-const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
-
-// 🚀 Ao carregar a página
-document.addEventListener("DOMContentLoaded", async () => {
-  await carregarConfiguracoesCorrida();
-
-  const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
-  if (corrida) {
-    motoristaEmServico = corrida.motorista;
-    document.getElementById("resultadoCorrida").innerHTML = `
-      🚧 Corrida ativa com ${corrida.motorista}<br>
-      📍 Origem: ${corrida.origem}<br>
-      🎯 Destino: ${corrida.destino}<br>
-      💰 Valor: R$ ${corrida.valor.toFixed(2)}
-    `;
-    listarMotoristasAtivos();
-  }
-});
-
-// 🔧 Carrega configurações atualizadas do Firebase
-async function carregarConfiguracoesCorrida() {
-  if (db) {
-    try {
-      const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
-      if (doc.exists) {
-        const config = doc.data();
-        localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
-        console.log("✅ Configurações carregadas do Firebase:", config);
-      } else {
-        console.warn("⚠️ Configurações não encontradas no Firebase.");
-      }
-    } catch (error) {
-      console.error("❌ Erro ao buscar configurações:", error);
-    }
-  }
-}
-
-// 🔄 Atualiza configurações no banco e localStorage
-async function atualizarConfiguracoesCorrida(taxaMinima, valorPorKm) {
-  const novasConfig = {
-    taxaMinima: parseFloat(taxaMinima),
-    valorPorKm: parseFloat(valorPorKm),
-  };
-
-  localStorage.setItem("configuracoesCorrida", JSON.stringify(novasConfig));
-
-  if (db) {
-    try {
-      await db.collection("configuracoes").doc("valoresPadrao").set(novasConfig);
-      console.log("✅ Configurações atualizadas no Firebase");
-    } catch (error) {
-      console.error("❌ Erro ao atualizar configurações no Firebase:", error);
-    }
-  }
-}
-
-// 🗺️ Inicializa o mapa
-window.initMap = function () {
-  mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
-    center: { lat: -23.0067, lng: -46.8466 },
-    zoom: 14,
-    mapTypeControl: false,
-    fullscreenControl: false,
-  });
-
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
-  directionsRenderer.setMap(mapaGoogle);
-
-  const origemInput = document.getElementById("origem");
-  const destinoInput = document.getElementById("destino");
-
-  autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
-
-  autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
-    componentRestrictions: { country: "br" },
-    fields: ["formatted_address", "geometry"],
-  });
-};
-
-// 📍 Usa localização atual
-window.usarLocalizacao = function () {
-  if (!navigator.geolocation) {
-    alert("Seu navegador não suporta geolocalização.");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      const geocoder = new google.maps.Geocoder();
-
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          document.getElementById("origem").value = results[0].formatted_address;
-        } else {
-          alert("Não foi possível converter coordenadas em endereço.");
-        }
-      });
-    },
-    err => {
-      console.error("Erro de geolocalização:", err);
-      alert("Erro ao obter localização.");
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-};
-
-// 💰 Calcula valor da corrida com dados atualizados
-function calcularValor(distanciaKm) {
-  const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
-  const taxaMinima = config.taxaMinima ?? 20.00;
-  const valorPorKm = config.valorPorKm ?? 8.00;
-  return Math.max(taxaMinima, distanciaKm * valorPorKm);
-}
-
-// 🚗 Calcula rota e valor
 window.calcularCorrida = function () {
   if (localStorage.getItem("corridaAtiva")) {
-    alert("Você já tem uma corrida ativa.");
+    alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
   }
 
@@ -274,6 +103,7 @@ window.calcularCorrida = function () {
     }
 
     directionsRenderer.setDirections(result);
+
     const route = result.routes[0].legs[0];
     coordenadasOrigem = route.start_location;
     coordenadasDestino = route.end_location;
@@ -293,20 +123,12 @@ window.calcularCorrida = function () {
   });
 };
 
-// 📝 Atualiza valores dinamicamente
-document.getElementById("taxaMinima").addEventListener("change", (e) => {
-  const taxa = e.target.value;
-  const valorKm = document.getElementById("valorPorKm").value;
-  atualizarConfiguracoesCorrida(taxa, valorKm);
-});
+function calcularValor(distanciaKm) {
+  const taxaMinima = 15.00;
+  const valorPorKm = 7.00;
+  return Math.max(taxaMinima, distanciaKm * valorPorKm);
+}
 
-document.getElementById("valorPorKm").addEventListener("change", (e) => {
-  const valorKm = e.target.value;
-  const taxa = document.getElementById("taxaMinima").value;
-  atualizarConfiguracoesCorrida(taxa, valorKm);
-});
-
-// 📋 Lista motoristas ativos
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
@@ -318,7 +140,7 @@ async function listarMotoristasAtivos() {
       const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
       snapshot.forEach(doc => motoristas.push(doc.data()));
     } catch (error) {
-      console.warn("Erro ao buscar motoristas:", error);
+      console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
     }
   }
 
@@ -356,10 +178,13 @@ async function listarMotoristasAtivos() {
   if (motoristaEmServico) {
     const cancelarBtn = document.createElement("button");
     cancelarBtn.textContent = "❌ Cancelar corrida";
-    cancelarBtn.onclick = cancelarMotorista;
+    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
 
     const finalizarBtn = document.createElement("button");
     finalizarBtn.textContent = "✅ Finalizar corrida";
+    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+
+    cancelarBtn.onclick = cancelarMotorista;
     finalizarBtn.onclick = finalizarCorrida;
 
     const grupoBotoes = document.createElement("div");
@@ -370,7 +195,67 @@ async function listarMotoristasAtivos() {
   }
 }
 
-// ❌ Cancela corrida ativa
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
+  if (localStorage.getItem("corridaAtiva")) {
+    alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
+    return;
+  }
+
+  const nomePassageiro = document.getElementById("nomePassageiro")?.value.trim();
+  const origem = document.getElementById("origem")?.value.trim();
+  const destino = document.getElementById("destino")?.value.trim();
+
+  if (!nomePassageiro) {
+    alert("Informe seu nome para solicitar a corrida.");
+    return;
+  }
+
+  const numeroLimpo = telefoneBruto.replace(/\D+/g, "");
+  const numeroWhatsApp = numeroLimpo.startsWith("55") ? numeroLimpo : "55" + numeroLimpo;
+
+  const latOrigem = coordenadasOrigem?.lat?.();
+  const lngOrigem = coordenadasOrigem?.lng?.();
+  const latDestino = coordenadasDestino?.lat?.();
+  const lngDestino = coordenadasDestino?.lng?.();
+
+    const linkOrigem = latOrigem && lngOrigem
+    ? `https://www.google.com/maps/search/?api=1&query=${latOrigem},${lngOrigem}`
+    : "";
+  const linkDestino = latDestino && lngDestino
+    ? `https://www.google.com/maps/search/?api=1&query=${latDestino},${lngDestino}`
+    : "";
+
+  const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
+  const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
+  window.open(linkWhatsApp, "_blank");
+
+  motoristaEmServico = nomeMotorista;
+  localStorage.setItem("corridaAtiva", JSON.stringify({
+    motorista: nomeMotorista,
+    passageiro: nomePassageiro,
+    origem,
+    destino,
+    valor: valorCorrida
+  }));
+  listarMotoristasAtivos();
+
+  if (db) {
+    try {
+      await db.collection("corridas").add({
+        passageiro: nomePassageiro,
+        motorista: nomeMotorista,
+        origem,
+        destino,
+        valor: valorCorrida,
+        data: new Date().toISOString()
+      });
+      console.log("✅ Corrida registrada no Firebase");
+    } catch (error) {
+      console.error("❌ Erro ao registrar corrida:", error);
+    }
+  }
+};
+
 function cancelarMotorista() {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
@@ -378,7 +263,6 @@ function cancelarMotorista() {
   document.getElementById("resultadoCorrida").innerHTML = "❌ Corrida cancelada.";
 }
 
-// ✅ Finaliza corrida ativa
 function finalizarCorrida() {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (!corrida) return;
@@ -400,7 +284,6 @@ function finalizarCorrida() {
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
 
-// 🧹 Limpa campos e reseta simulador
 window.limparCampos = function () {
   document.getElementById("formSimulador")?.reset();
   document.getElementById("resultadoCorrida").innerHTML = "";
@@ -410,4 +293,5 @@ window.limparCampos = function () {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
+
 
