@@ -10,15 +10,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="manifest" href="manifest.json" />
 
-  <!-- Verificação de autenticação -->
-  <script>
-    const usuario = localStorage.getItem("usuario");
-    const permitido = ["admin", "motorista", "visitante"];
-    if (!permitido.includes(usuario)) {
-      window.location.replace("00-login-admin.html");
-    }
-  </script>
-
   <!-- Estilos internos específicos da página -->
   <style>
     .menu {
@@ -96,14 +87,15 @@
     <p>Carregando...</p>
   </div>
 
-  <main class="container">
+  <main class="container" style="display:none;">
     <h1>🚖 Bem-vindo ao ViaSimples</h1>
 
     <nav class="menu">
       <a href="03-simulador.html">Simulador de Corrida <span>🧮</span></a>
       <a href="01-cadastro-motorista.html">Cadastro de Motorista <span>📝</span></a>
-      <a href="02-admin-painel.html">Painel de Motoristas <span>📋</span></a>
-      <a href="gerenciar.html" class="botao-gerenciar">📋 Gerenciar Motoristas</a>
+      <a href="02-admin-painel.html">Painel de Motoristas <span>📝</span></a>
+      <a href="gerenciar.html">Gerenciar Motoristas <span>📋</span></a>
+	  <a href="04-configuracoes.html">Configuracoes Valores <span>📋</span></a>
     </nav>
   </main>
 
@@ -112,43 +104,49 @@
     <a href="01-cadastro-motorista.html"><span>👤</span>Motorista</a>
     <a href="02-admin-painel.html"><span>📊</span>Painel</a>
     <a href="00-login-admin.html"><span>🔑</span>Login</a>
+	<a href="04-configuracoes.html"><span>📊</span>Configuracoes</a>
   </nav>
 
-  <!-- Firebase compatível com navegador -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
-      authDomain: "viasimples-9d340.firebaseapp.com",
-      projectId: "viasimples-9d340",
-      storageBucket: "viasimples-9d340.appspot.com",
-      messagingSenderId: "372389283187",
-      appId: "1:372389283187:web:139f81f5224bb0958e7106"
-    };
 
-    firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore(); // define global db para uso em outras páginas
-  </script>
-
+  <!-- Inicialização do Firebase e lógica principal -->
   <script>
-    window.addEventListener("load", () => {
+    document.addEventListener("DOMContentLoaded", () => {
       const splash = document.getElementById("splash");
-      if (splash) {
+      const main = document.querySelector("main.container");
+
+      // Inicializa Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+        authDomain: "viasimples-9d340.firebaseapp.com",
+        projectId: "viasimples-9d340",
+        storageBucket: "viasimples-9d340.appspot.com",
+        messagingSenderId: "372389283187",
+        appId: "1:372389283187:web:139f81f5224bb0958e7106"
+      };
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+
+      // Splash
+      if (splash && main) {
         splash.style.opacity = 0;
-        setTimeout(() => splash.style.display = "none", 500);
+        setTimeout(() => {
+          splash.style.display = "none";
+          main.style.display = "block";
+        }, 400);
       }
 
-      // Service Worker para PWA
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js")
-          .then(() => console.log("✅ Service Worker registrado"))
-          .catch(err => console.error("❌ Erro ao registrar Service Worker", err));
-      }
-
-      // Bloqueio de links internos para usuários não logados
+      // Verificação de acesso
       const usuario = localStorage.getItem("usuario");
+      const permitido = ["admin", "motorista", "visitante"];
+      if (!permitido.includes(usuario)) {
+        window.location.replace("00-login-admin.html");
+        return;
+      }
 
+      // Bloqueio de links
       document.querySelectorAll("a[href]").forEach(link => {
         const href = link.getAttribute("href");
         const acessoLivre = href.includes("03-simulador") || href.includes("00-login");
@@ -163,50 +161,37 @@
         }
       });
 
-      // Registrar presença no Firebase
+      // Registro de acesso
       const nome = localStorage.getItem("nomeVisitante") || "Usuário";
       const perfil = localStorage.getItem("usuario");
 
-      if (perfil && window.db) {
-        db.collection("acessos").add({
-          nome: nome,
-          perfil: perfil,
-          timestamp: new Date().toISOString()
-        }).then(() => {
-          console.log("✅ Acesso registrado no Firebase");
-        }).catch(err => {
-          console.warn("⚠️ Falha ao registrar acesso:", err);
-        });
+      setTimeout(() => {
+        if (perfil && window.db) {
+          window.db.collection("acessos").add({
+            nome: nome,
+            perfil: perfil,
+            timestamp: new Date().toISOString()
+          }).then(() => {
+            console.log("✅ Acesso registrado no Firebase");
+          }).catch(err => {
+            console.warn("⚠️ Falha ao registrar acesso:", err);
+          });
+        }
+      }, 1000);
+
+      // GitHub Pages reload
+      if (location.hostname.includes("github.io") && !localStorage.getItem("githubDesbloqueado")) {
+        localStorage.setItem("githubDesbloqueado", "true");
+        setTimeout(() => location.reload(), 1000);
+      }
+
+      // Service Worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js")
+          .then(() => console.log("✅ Service Worker registrado"))
+          .catch(err => console.error("❌ Erro ao registrar Service Worker", err));
       }
     });
   </script>
-  
-  <script>
-  // Força recarregamento limpo no GitHub Pages
-  if (location.hostname.includes("github.io")) {
-    console.log("🔄 Executando verificação de ambiente GitHub Pages");
-
-    // Verifica se recursos essenciais estão carregados
-    const scripts = [
-      "firebase-app-compat.js",
-      "firebase-firestore-compat.js",
-      "03-simulador-script.js"
-    ];
-
-    scripts.forEach(src => {
-      const found = [...document.scripts].some(s => s.src.includes(src));
-      if (!found) {
-        console.warn(`⚠️ Script não carregado: ${src}`);
-      }
-    });
-
-    // Força recarregamento se necessário
-    if (!localStorage.getItem("githubDesbloqueado")) {
-      localStorage.setItem("githubDesbloqueado", "true");
-      location.reload(true); // força reload completo
-    }
-  }
-</script>
-
 </body>
 </html>

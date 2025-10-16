@@ -1,3 +1,7 @@
+// 🔌 Firebase Firestore
+const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+
+// 🌍 Variáveis globais
 let mapaGoogle, directionsService, directionsRenderer;
 let autocompleteOrigem, autocompleteDestino;
 let coordenadasOrigem = null;
@@ -5,9 +9,28 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+// 🔄 Carrega configurações da corrida do Firebase
+async function carregarConfiguracoesCorridaFirebase() {
+  if (!db) return;
 
-document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
+    if (doc.exists) {
+      const config = doc.data();
+      localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
+      console.log("📦 Configurações carregadas:", config);
+    } else {
+      console.warn("⚠️ Documento 'valoresPadrao' não encontrado na coleção 'configuracoes'");
+    }
+  } catch (error) {
+    console.error("❌ Erro ao carregar configurações:", error);
+  }
+}
+
+// 🚀 Inicializa simulador ao carregar a página
+document.addEventListener("DOMContentLoaded", async () => {
+  await carregarConfiguracoesCorridaFirebase();
+
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
     motoristaEmServico = corrida.motorista;
@@ -24,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// 🗺️ Função global exigida pelo Google Maps
 window.initMap = function () {
   mapaGoogle = new google.maps.Map(document.getElementById("mapaGoogle"), {
     center: { lat: -23.0067, lng: -46.8466 },
@@ -54,6 +78,7 @@ window.initMap = function () {
   }
 };
 
+// 📍 Usa localização atual do usuário
 window.usarLocalizacao = function () {
   if (!navigator.geolocation) {
     alert("Seu navegador não suporta geolocalização.");
@@ -81,6 +106,15 @@ window.usarLocalizacao = function () {
   );
 };
 
+// 💰 Calcula valor da corrida com base nas configurações atuais
+function calcularValor(distanciaKm) {
+  const config = JSON.parse(localStorage.getItem("configuracoesCorrida")) || {};
+  const taxaMinima = typeof config.taxaMinima === "number" ? config.taxaMinima : 30;
+  const valorPorKm = typeof config.valorPorKm === "number" ? config.valorPorKm : 10;
+  return Math.max(taxaMinima, distanciaKm * valorPorKm);
+}
+
+// 🚗 Calcula rota e exibe resultado
 window.calcularCorrida = function () {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
@@ -127,16 +161,78 @@ window.calcularCorrida = function () {
     }
 
     listarMotoristasAtivos();
-    const limparBtn = document.getElementById("botaoLimpar");
-    if (limparBtn) limparBtn.style.display = "inline-block";
+    document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
+// 🚘 Lista motoristas ativos
+async function listarMotoristasAtivos() {
+  const lista = document.getElementById("listaMotoristas");
+  if (!lista) return;
 
-function calcularValor(distanciaKm) {
-  const taxaMinima = 20.00;
-  const valorPorKm = 4.50;
-  return Math.max(taxaMinima, distanciaKm * valorPorKm);
+  lista.innerHTML = "";
+  let motoristas = [];
+
+  if (db) {
+    try {
+      const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
+      snapshot.forEach(doc => motoristas.push(doc.data()));
+    } catch (error) {
+      console.warn("⚠️ Erro ao buscar motoristas:", error);
+    }
+  }
+
+  if (motoristas.length === 0) {
+    const local = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    motoristas = local.filter(m => m.ativo);
+  }
+
+  if (motoristas.length === 0) {
+    lista.innerHTML = "<p>Nenhum motorista ativo disponível.</p>";
+    return;
+  }
+
+  motoristas.forEach(motorista => {
+    const card = document.createElement("div");
+    card.className = "motorista-card ativo";
+    card.innerHTML = `
+      <div><strong>👤 ${motorista.nome}</strong></div>
+      <div>🏷️ Marca: ${motorista.marca}</div>
+      <div>🚗 Modelo: ${motorista.modelo}</div>
+      <div>🚘 Tipo de carro: ${motorista["Tipo de carro"]}</div>
+      <div>📅 Ano: ${motorista.ano}</div>
+      <div>🔠 Placa: ${motorista.placa}</div>
+      <div>🎨 Cor: ${motorista.cor}</div>
+      <div>📞 Telefone: ${motorista.telefone}</div>
+      ${
+        motoristaEmServico === motorista.nome
+          ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
+          : `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
+      }
+    `;
+    lista.appendChild(card);
+  });
+
+  if (motoristaEmServico) {
+    const cancelarBtn = document.createElement("button");
+    cancelarBtn.textContent = "❌ Cancelar corrida";
+    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer;";
+
+    const finalizarBtn = document.createElement("button");
+    finalizarBtn.textContent = "✅ Finalizar corrida";
+    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer;";
+
+    const grupoBotoes = document.createElement("div");
+    grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center;";
+    grupoBotoes.appendChild(cancelarBtn);
+    grupoBotoes.appendChild(finalizarBtn);
+    lista.appendChild(grupoBotoes);
+
+    cancelarBtn.onclick = cancelarMotorista;
+    finalizarBtn.onclick = finalizarCorrida;
+  }
 }
+
+// 📲 Envia solicitação via WhatsApp
 window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
@@ -167,7 +263,15 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     ? `https://www.google.com/maps/search/?api=1&query=${latDestino},${lngDestino}`
     : "";
 
-  const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
+  const mensagem = [
+    `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.`,
+    `💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}`,
+    `📍 Origem: ${origem}`,
+    linkOrigem ? `🔗 ${linkOrigem}` : "",
+    `🎯 Destino: ${destino}`,
+    linkDestino ? `🔗 ${linkDestino}` : ""
+  ].filter(Boolean).join("\n\n");
+
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
 
@@ -179,6 +283,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     destino,
     valor: valorCorrida
   }));
+
   listarMotoristasAtivos();
 
   if (db) {
@@ -198,6 +303,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   }
 };
 
+// ❌ Cancela a corrida ativa
 function cancelarMotorista() {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
@@ -206,6 +312,7 @@ function cancelarMotorista() {
   if (resultado) resultado.innerHTML = "❌ Corrida cancelada.";
 }
 
+// ✅ Finaliza a corrida ativa
 function finalizarCorrida() {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (!corrida) return;
@@ -228,6 +335,7 @@ function finalizarCorrida() {
   if (resultado) resultado.innerHTML = "✅ Corrida finalizada com sucesso.";
 }
 
+// 🧹 Limpa todos os campos e reseta o simulador
 window.limparCampos = function () {
   document.getElementById("formSimulador")?.reset();
   document.getElementById("resultadoCorrida").innerHTML = "";

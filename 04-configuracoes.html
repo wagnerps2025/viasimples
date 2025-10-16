@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurações de Corrida - ViaSimples</title>
+  <link rel="stylesheet" href="style-viasimples.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>⚙️ Configurações de Corrida</h1>
+
+    <form id="formConfig">
+      <label for="taxaMinima">💰 Taxa mínima (R$):</label>
+      <input type="number" id="taxaMinima" step="0.01" required />
+
+      <label for="valorPorKm">🚗 Valor por km (R$):</label>
+      <input type="number" id="valorPorKm" step="0.01" required />
+
+      <button type="submit">💾 Salvar configurações</button>
+    </form>
+
+    <div id="statusConfig" role="status" aria-live="polite"></div>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <!-- Script do painel -->
+  <script>
+    async function carregarConfiguracoes() {
+      const status = document.getElementById("statusConfig");
+      try {
+        const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById("taxaMinima").value = data.taxaMinima;
+          document.getElementById("valorPorKm").value = data.valorPorKm;
+          status.textContent = "✅ Configurações carregadas.";
+        } else {
+          status.textContent = "⚠️ Documento não encontrado.";
+        }
+      } catch (error) {
+        status.textContent = "❌ Erro ao carregar configurações.";
+        console.error(error);
+      }
+    }
+
+    async function salvarConfiguracoes(e) {
+      e.preventDefault();
+      const taxaMinima = parseFloat(document.getElementById("taxaMinima").value);
+      const valorPorKm = parseFloat(document.getElementById("valorPorKm").value);
+      const status = document.getElementById("statusConfig");
+
+      try {
+        await db.collection("configuracoes").doc("valoresPadrao").set({
+          taxaMinima,
+          valorPorKm
+        });
+        status.textContent = "✅ Configurações salvas com sucesso.";
+      } catch (error) {
+        status.textContent = "❌ Erro ao salvar configurações.";
+        console.error(error);
+      }
+    }
+
+    document.getElementById("formConfig").addEventListener("submit", salvarConfiguracoes);
+    window.addEventListener("DOMContentLoaded", carregarConfiguracoes);
+  </script>
+</body>
+</html>
