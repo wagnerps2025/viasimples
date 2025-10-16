@@ -11,7 +11,7 @@
   <main class="container">
     <h1>Simule sua corrida</h1>
 
-    <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
+    <form id="formSimulador" novalidate>
       <label for="nomePassageiro">👤 Seu nome completo:</label>
       <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira" />
 
@@ -23,7 +23,7 @@
 
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
-        <button type="submit">🚗 Calcular corrida</button>
+        <button type="submit" onclick="event.preventDefault(); calcularCorrida();">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
       </div>
@@ -50,8 +50,10 @@
     window.db = firebase.firestore();
   </script>
 
+  <!-- Script principal do simulador (sem type="module") -->
   <script src="03-simulador-script.js"></script>
+
+  <!-- Google Maps com Places API (initMap precisa estar no escopo global) -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
-
