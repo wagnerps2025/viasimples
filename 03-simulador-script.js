@@ -137,6 +137,26 @@ function calcularValor(distanciaKm) {
   const valorPorKm = 4.50;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
+  if (localStorage.getItem("corridaAtiva")) {
+    alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
+    return;
+  }
+
+  const nomePassageiro = document.getElementById("nomePassageiro")?.value.trim();
+  const origem = document.getElementById("origem")?.value.trim();
+  const destino = document.getElementById("destino")?.value.trim();
+
+  if (!nomePassageiro) {
+    alert("Informe seu nome para solicitar a corrida.");
+    return;
+  }
+
+  const numeroLimpo = telefoneBruto.replace(/\D+/g, "");
+  const numeroWhatsApp = numeroLimpo.startsWith("55") ? numeroLimpo : "55" + numeroLimpo;
+
+  const latOrigem = coordenadasOrigem?.lat?.();
+  const lngOrigem = coordenadasOrigem?.lng?.();
   const latDestino = coordenadasDestino?.lat?.();
   const lngDestino = coordenadasDestino?.lng?.();
 
