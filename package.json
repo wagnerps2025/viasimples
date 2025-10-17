@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "00-cadastro-admin.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -11,6 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "firebase": "^9.23.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.5"
   }
 }
