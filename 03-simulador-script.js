@@ -373,3 +373,13 @@ window.addEventListener("load", () => {
   document.getElementById("campoValorPorKm").value = "";
 });
 
+window.addEventListener("load", async () => {
+  const docRef = doc(db, "configuracoes", "valoresPadrao");
+  const snapshot = await getDoc(docRef);
+  if (snapshot.exists()) {
+    const { taxaMinima, valorPorKm } = snapshot.data();
+    document.getElementById("campoTaxaMinima").value = taxaMinima;
+    document.getElementById("campoValorPorKm").value = valorPorKm;
+  }
+});
+
