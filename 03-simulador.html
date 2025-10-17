@@ -11,6 +11,47 @@
   <meta http-equiv="Expires" content="0" />
 
   <link rel="stylesheet" href="style-viasimples.css" />
+  <style>
+    /* Oculta campos sensíveis */
+    .invisivel {
+      display: none !important;
+    }
+
+    /* Estilo proporcional para botões */
+    .botoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .botoes button {
+      flex: 1 1 45%;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .botoes button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Botões de ação extra */
+    #botaoCancelar,
+    #botaoFinalizar {
+      background-color: #dc3545;
+    }
+
+    #botaoCancelar:hover,
+    #botaoFinalizar:hover {
+      background-color: #a71d2a;
+    }
+  </style>
 </head>
 
 <body>
@@ -27,18 +68,22 @@
       <label for="destino">🎯 Destino final:</label>
       <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
 
-      <!-- Campos atualizados dinamicamente -->
-      <label for="campoTaxaMinima">💰 Taxa mínima (R$):</label>
-      <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
+      <!-- Campos ocultos que continuam funcionando -->
+      <div class="invisivel">
+        <label for="campoTaxaMinima">Taxa mínima (R$):</label>
+        <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
 
-      <label for="campoValorPorKm">📏 Valor por km (R$):</label>
-      <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
+        <label for="campoValorPorKm">Valor por km (R$):</label>
+        <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
+      </div>
 
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
+        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">🏁 Finalizar corrida</button>
       </div>
     </form>
 
