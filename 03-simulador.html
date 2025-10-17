@@ -45,17 +45,41 @@
       background-color: #FFC400;
     }
 
-    /* Botões de ação crítica ajustados à largura */
-    #botaoCancelar,
-    #botaoFinalizar {
-      flex: 1 1 100%;
-      background-color: #DC3545;
-      color: #FFF;
+    /* Botões do rodapé lado a lado */
+    .rodape-botoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: center;
     }
 
-    #botaoCancelar:hover,
-    #botaoFinalizar:hover {
+    .rodape-botoes button {
+      flex: 1 1 45%;
+      padding: 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      background-color: #DC3545;
+      color: #FFF;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      min-width: 140px;
+      max-width: 100%;
+    }
+
+    .rodape-botoes button:hover {
       background-color: #A71D2A;
+    }
+
+    /* Rodapé fixo */
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+      padding: 20px 10px;
     }
   </style>
 </head>
@@ -88,6 +112,9 @@
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+      </div>
+
+      <div class="rodape-botoes">
         <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
         <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">🏁 Finalizar corrida</button>
       </div>
@@ -97,6 +124,10 @@
     <div id="resultadoCorrida" role="region" aria-live="polite"></div>
     <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
   </main>
+
+  <footer>
+    © 2025 ViaSimples. Todos os direitos reservados.
+  </footer>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
