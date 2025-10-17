@@ -21,35 +21,41 @@
     .botoes {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: center;
     }
 
     .botoes button {
       flex: 1 1 45%;
-      padding: 12px;
-      font-size: 1rem;
+      padding: 14px;
+      font-size: 16px;
       border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: white;
+      border-radius: 12px;
+      background-color: #FFD600; /* Amarelo estilo 99 */
+      color: #000;
+      font-weight: 600;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      min-width: 140px;
+      max-width: 100%;
     }
 
     .botoes button:hover {
-      background-color: #0056b3;
+      background-color: #FFC400;
     }
 
-    /* Botões de ação extra */
+    /* Botões de ação crítica ajustados à largura */
     #botaoCancelar,
     #botaoFinalizar {
-      background-color: #dc3545;
+      flex: 1 1 100%;
+      background-color: #DC3545;
+      color: #FFF;
     }
 
     #botaoCancelar:hover,
     #botaoFinalizar:hover {
-      background-color: #a71d2a;
+      background-color: #A71D2A;
     }
   </style>
 </head>
