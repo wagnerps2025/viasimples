@@ -9,6 +9,25 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "./firebase-config.js"; // ajuste conforme seu projeto
+
+const valoresRef = doc(db, "configuracoes", "valoresPadrao");
+
+onSnapshot(valoresRef, (snapshot) => {
+  if (snapshot.exists()) {
+    const { taxaMinima, valorPorKm } = snapshot.data();
+
+    // Atualiza apenas os campos desejados
+    const campoTaxa = document.getElementById("campoTaxaMinima");
+    const campoKm = document.getElementById("campoValorPorKm");
+
+    if (campoTaxa) campoTaxa.value = taxaMinima;
+    if (campoKm) campoKm.value = valorPorKm;
+  }
+});
+
+
 // 🔄 Carrega configurações da corrida do Firebase
 async function carregarConfiguracoesCorridaFirebase() {
   if (!db) return;
@@ -348,3 +367,9 @@ window.limparCampos = function () {
   valorCorrida = 0;
   localStorage.removeItem("corridaAtiva");
 };
+
+window.addEventListener("load", () => {
+  document.getElementById("campoTaxaMinima").value = "";
+  document.getElementById("campoValorPorKm").value = "";
+});
+
