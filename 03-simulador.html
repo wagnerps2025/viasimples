@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
+
+  <!-- Estilos principais -->
   <link rel="stylesheet" href="style-viasimples.css" />
 </head>
 
@@ -34,26 +36,30 @@
     <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
   </main>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Inicialização do Firebase -->
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
-      authDomain: "viasimples-9d340.firebaseapp.com",
-      projectId: "viasimples-9d340",
-      storageBucket: "viasimples-9d340.appspot.com",
-      messagingSenderId: "372389283187",
-      appId: "1:372389283187:web:139f81f5224bb0958e7106"
-    };
-    firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore();
+    document.addEventListener("DOMContentLoaded", () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+        authDomain: "viasimples-9d340.firebaseapp.com",
+        projectId: "viasimples-9d340",
+        storageBucket: "viasimples-9d340.appspot.com",
+        messagingSenderId: "372389283187",
+        appId: "1:372389283187:web:139f81f5224bb0958e7106"
+      };
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+    });
   </script>
 
-  <!-- Script principal do simulador (sem type="module" para permitir callback global) -->
-  <script src="03-simulador-script.js"></script>
+  <!-- Script principal do simulador -->
+  <script src="03-simulador-script.js" defer></script>
 
-  <!-- Google Maps com Places API (callback exige que initMap esteja no escopo global) -->
+  <!-- Google Maps com Places API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
