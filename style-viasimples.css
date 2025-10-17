@@ -86,11 +86,24 @@ button {
   font-size: 16px;
   transition: background-color 0.3s ease, transform 0.2s ease;
   min-width: 160px;
+  flex: 1 1 45%;
 }
 
 button:hover {
   background-color: #FFC400;
   transform: translateY(-2px);
+}
+
+/* === Botões de ação crítica === */
+#botaoCancelar,
+#botaoFinalizar {
+  background-color: #DC3545;
+  color: #FFF;
+}
+
+#botaoCancelar:hover,
+#botaoFinalizar:hover {
+  background-color: #A71D2A;
 }
 
 /* === Mapa Google === */
@@ -170,6 +183,7 @@ button:hover {
   button {
     font-size: 15px;
     min-width: 100%;
+    flex: 1 1 100%;
   }
 
   #mapaGoogle {
