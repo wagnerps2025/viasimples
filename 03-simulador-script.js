@@ -9,25 +9,6 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "./firebase-config.js"; // ajuste conforme seu projeto
-
-const valoresRef = doc(db, "configuracoes", "valoresPadrao");
-
-onSnapshot(valoresRef, (snapshot) => {
-  if (snapshot.exists()) {
-    const { taxaMinima, valorPorKm } = snapshot.data();
-
-    // Atualiza apenas os campos desejados
-    const campoTaxa = document.getElementById("campoTaxaMinima");
-    const campoKm = document.getElementById("campoValorPorKm");
-
-    if (campoTaxa) campoTaxa.value = taxaMinima;
-    if (campoKm) campoKm.value = valorPorKm;
-  }
-});
-
-
 // 🔄 Carrega configurações da corrida do Firebase
 async function carregarConfiguracoesCorridaFirebase() {
   if (!db) return;
@@ -36,8 +17,19 @@ async function carregarConfiguracoesCorridaFirebase() {
     const doc = await db.collection("configuracoes").doc("valoresPadrao").get();
     if (doc.exists) {
       const config = doc.data();
+
+      // Atualiza localStorage
       localStorage.setItem("configuracoesCorrida", JSON.stringify(config));
       console.log("📦 Configurações carregadas:", config);
+
+      // Atualiza os campos no HTML diretamente
+      const campoTaxa = document.getElementById("campoTaxaMinima");
+      const campoKm = document.getElementById("campoValorPorKm");
+
+      if (campoTaxa) campoTaxa.value = config.taxaMinima;
+      if (campoKm) campoKm.value = config.valorPorKm;
+
+      console.log("✅ Campos atualizados com dados do Firebase");
     } else {
       console.warn("⚠️ Documento 'valoresPadrao' não encontrado na coleção 'configuracoes'");
     }
@@ -45,6 +37,7 @@ async function carregarConfiguracoesCorridaFirebase() {
     console.error("❌ Erro ao carregar configurações:", error);
   }
 }
+
 
 // 🚀 Inicializa simulador ao carregar a página
 document.addEventListener("DOMContentLoaded", async () => {
@@ -367,19 +360,3 @@ window.limparCampos = function () {
   valorCorrida = 0;
   localStorage.removeItem("corridaAtiva");
 };
-
-window.addEventListener("load", () => {
-  document.getElementById("campoTaxaMinima").value = "";
-  document.getElementById("campoValorPorKm").value = "";
-});
-
-window.addEventListener("load", async () => {
-  const docRef = doc(db, "configuracoes", "valoresPadrao");
-  const snapshot = await getDoc(docRef);
-  if (snapshot.exists()) {
-    const { taxaMinima, valorPorKm } = snapshot.data();
-    document.getElementById("campoTaxaMinima").value = taxaMinima;
-    document.getElementById("campoValorPorKm").value = valorPorKm;
-  }
-});
-

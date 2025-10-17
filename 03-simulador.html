@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
+
+  <!-- Evita cache agressivo no celular -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <link rel="stylesheet" href="style-viasimples.css" />
 </head>
 
@@ -20,6 +26,13 @@
 
       <label for="destino">🎯 Destino final:</label>
       <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
+
+      <!-- Campos atualizados dinamicamente -->
+      <label for="campoTaxaMinima">💰 Taxa mínima (R$):</label>
+      <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
+
+      <label for="campoValorPorKm">📏 Valor por km (R$):</label>
+      <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
 
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
@@ -50,10 +63,10 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- Script principal do simulador (sem type="module" para permitir callback global) -->
-  <script src="03-simulador-script.js"></script>
+  <!-- Script principal do simulador -->
+  <script src="03-simulador-script.js?v=1.0.0"></script>
 
-  <!-- Google Maps com Places API (callback exige que initMap esteja no escopo global) -->
+  <!-- Google Maps com Places API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
