@@ -9,8 +9,8 @@
 /* === Corpo da página === */
 body {
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  background-color: #F5F6F8;
-  color: #212121;
+  background-color: #F2F2F2;
+  color: #1C1C1C;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -19,17 +19,17 @@ body {
 .container {
   max-width: 720px;
   margin: 40px auto;
-  padding: 30px;
-  background-color: #FFF;
+  padding: 32px;
+  background-color: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* === Título principal === */
 h1 {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  color: #1A1A1A;
+  color: #111;
   margin-bottom: 24px;
   text-align: center;
 }
@@ -37,10 +37,10 @@ h1 {
 /* === Rótulos de formulário === */
 label {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   display: block;
   margin: 20px 0 8px;
-  color: #333;
+  color: #444;
 }
 
 /* === Campos de entrada === */
@@ -52,16 +52,16 @@ input[type="number"],
 select {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid #DADCE0;
-  border-radius: 12px;
-  background-color: #FFF;
-  font-size: 15px;
+  border: 1px solid #CCC;
+  border-radius: 10px;
+  background-color: #FAFAFA;
+  font-size: 14px;
   transition: border-color 0.3s ease;
 }
 
 input:focus,
 select:focus {
-  border-color: #FFD600;
+  border-color: #FFCC00;
   outline: none;
 }
 
@@ -76,14 +76,14 @@ select:focus {
 
 /* === Botões padrão === */
 .botoes button {
-  background-color: #FFD600;
+  background-color: #FFCC00;
   color: #000;
   border: none;
   padding: 14px 22px;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   transition: background-color 0.3s ease, transform 0.2s ease;
   min-width: 140px;
   flex: 1 1 45%;
@@ -91,20 +91,20 @@ select:focus {
 }
 
 .botoes button:hover {
-  background-color: #FFC400;
+  background-color: #E6B800;
   transform: translateY(-2px);
 }
 
 /* === Botões de ação crítica === */
 #botaoCancelar,
 #botaoFinalizar {
-  background-color: #DC3545;
+  background-color: #D32F2F;
   color: #FFF;
 }
 
 #botaoCancelar:hover,
 #botaoFinalizar:hover {
-  background-color: #A71D2A;
+  background-color: #B71C1C;
 }
 
 /* === Mapa Google === */
@@ -113,7 +113,7 @@ select:focus {
   height: 400px;
   min-height: 300px;
   margin-top: 30px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #DDD;
   background-color: #EEE;
   overflow: hidden;
@@ -122,7 +122,7 @@ select:focus {
 /* === Resultado da corrida === */
 #resultadoCorrida {
   margin-top: 25px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   text-align: center;
   color: #333;
@@ -136,26 +136,26 @@ select:focus {
 /* === Cartão de motorista === */
 .motorista-card {
   background-color: #FFF;
-  border: 1px solid #E0E0E0;
-  border-radius: 12px;
+  border: 1px solid #DDD;
+  border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .motorista-card.ativo {
-  background-color: #E3F2FD;
+  background-color: #FFF8E1;
 }
 
 .motorista-card strong {
-  font-size: 18px;
-  color: #1A1A1A;
+  font-size: 17px;
+  color: #222;
 }
 
 /* === Botões dentro do cartão === */
 .motorista-card button {
   margin-top: 12px;
-  background-color: #FFD600;
+  background-color: #FFCC00;
   color: #000;
   font-weight: 600;
   padding: 10px 16px;
@@ -167,7 +167,7 @@ select:focus {
 }
 
 .motorista-card button:hover {
-  background-color: #FFC400;
+  background-color: #E6B800;
 }
 
 /* === Responsivo para telas menores === */
@@ -178,11 +178,11 @@ select:focus {
   }
 
   h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .botoes button {
-    font-size: 15px;
+    font-size: 14px;
     flex: 1 1 100%;
     min-width: 100%;
   }
