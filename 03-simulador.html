@@ -17,7 +17,7 @@
       display: none !important;
     }
 
-    /* Estilo proporcional para botões */
+    /* Estilo para agrupamento de botões */
     .botoes {
       display: flex;
       flex-wrap: wrap;
@@ -45,35 +45,19 @@
       background-color: #FFC400;
     }
 
-    /* Botões do rodapé lado a lado */
-    .rodape-botoes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
-      justify-content: center;
-    }
-
-    .rodape-botoes button {
-      flex: 1 1 45%;
-      padding: 14px;
-      font-size: 16px;
-      border: none;
-      border-radius: 12px;
+    /* Botões de ação crítica */
+    #botaoCancelar,
+    #botaoFinalizar {
       background-color: #DC3545;
       color: #FFF;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      min-width: 140px;
-      max-width: 100%;
     }
 
-    .rodape-botoes button:hover {
+    #botaoCancelar:hover,
+    #botaoFinalizar:hover {
       background-color: #A71D2A;
     }
 
-    /* Rodapé fixo */
+    /* Rodapé */
     footer {
       margin-top: 40px;
       text-align: center;
@@ -112,11 +96,8 @@
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
-      </div>
-
-      <div class="rodape-botoes">
         <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
-        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">🏁 Finalizar corrida</button>
+        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
       </div>
     </form>
 
