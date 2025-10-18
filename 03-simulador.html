@@ -23,6 +23,16 @@
   gap: 12px;
   margin-top: 30px;
   justify-content: center;
+.invisivel {
+  display: none !important;
+}
+
+.botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+  justify-content: center;
 }
 
 .botoes button {
@@ -40,37 +50,33 @@
   white-space: nowrap;
 }
 
-.botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
+/* === Botões padrão estilo 99 === */
+.botoes button:not(#botaoCancelar):not(#botaoFinalizar),
+#botaoCancelar,
+#botaoFinalizar {
   background-color: #FFD600;
   color: #000;
+  font-size: 16px;
+  padding: 16px 28px;
+  flex: 1 1 auto;
 }
 
-.botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
+/* === Hover padrão === */
+.botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover,
+#botaoCancelar:hover,
+#botaoFinalizar:hover {
   background-color: #FFC400;
   transform: translateY(-2px);
 }
 
-#botaoCancelar,
-#botaoFinalizar {
-  background-color: #DC3545;
-  color: #FFF;
-  flex: 1 1 100%;
-  padding: 24px 36px;
-  font-size: 20px;
-}
-
-#botaoCancelar:hover,
-#botaoFinalizar:hover {
-  background-color: #A71D2A;
-  transform: translateY(-2px);
-}
-
+/* === Rodapé === */
 footer {
   margin-top: 40px;
   text-align: center;
   font-size: 14px;
   color: #777;
   padding: 20px 10px;
+
 }
 
   </style>
@@ -139,4 +145,5 @@ footer {
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
+
 
