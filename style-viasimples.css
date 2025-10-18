@@ -20,7 +20,7 @@ body {
   max-width: 720px;
   margin: 40px auto;
   padding: 30px;
-  background-color: #FFF;
+  background-color: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
@@ -39,7 +39,8 @@ label {
   font-weight: 600;
   font-size: 15px;
   display: block;
-  margin: 20px 0 8px;
+  margin-top: 20px;
+  margin-bottom: 8px;
   color: #333;
 }
 
@@ -68,16 +69,16 @@ select:focus {
 /* === Botões agrupados === */
 .botoes {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
+  flex-wrap: wrap;
   margin-top: 30px;
   justify-content: center;
 }
 
 /* === Botões padrão === */
-.botoes button {
+button {
   background-color: #FFD600;
-  color: #000;
+  color: #000000;
   border: none;
   padding: 14px 22px;
   border-radius: 12px;
@@ -85,33 +86,19 @@ select:focus {
   font-weight: 600;
   font-size: 16px;
   transition: background-color 0.3s ease, transform 0.2s ease;
-  min-width: 140px;
-  flex: 1 1 45%;
-  max-width: 100%;
+  min-width: 160px;
 }
 
-.botoes button:hover {
+button:hover {
   background-color: #FFC400;
   transform: translateY(-2px);
-}
-
-/* === Botões de ação crítica === */
-#botaoCancelar,
-#botaoFinalizar {
-  background-color: #DC3545;
-  color: #FFF;
-}
-
-#botaoCancelar:hover,
-#botaoFinalizar:hover {
-  background-color: #A71D2A;
 }
 
 /* === Mapa Google === */
 #mapaGoogle {
   width: 100%;
-  height: 400px;
   min-height: 300px;
+  height: 400px;
   margin-top: 30px;
   border-radius: 12px;
   border: 1px solid #DDD;
@@ -135,11 +122,11 @@ select:focus {
 
 /* === Cartão de motorista === */
 .motorista-card {
-  background-color: #FFF;
   border: 1px solid #E0E0E0;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
+  background-color: #FFF;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
@@ -163,7 +150,6 @@ select:focus {
   border: none;
   cursor: pointer;
   width: 100%;
-  transition: background-color 0.3s ease;
 }
 
 .motorista-card button:hover {
@@ -181,9 +167,8 @@ select:focus {
     font-size: 24px;
   }
 
-  .botoes button {
+  button {
     font-size: 15px;
-    flex: 1 1 100%;
     min-width: 100%;
   }
 
@@ -191,3 +176,4 @@ select:focus {
     height: 300px;
   }
 }
+

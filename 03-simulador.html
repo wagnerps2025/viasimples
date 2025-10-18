@@ -4,74 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
-
-  <!-- Evita cache agressivo no celular -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
   <link rel="stylesheet" href="style-viasimples.css" />
-  <style>
-    /* Oculta campos sensíveis */
-    .invisivel {
-      display: none !important;
-    }
-
-    /* Agrupamento de botões */
-    .botoes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 30px;
-      justify-content: center;
-    }
-
-    .botoes button {
-      flex: 1 1 45%;
-      padding: 14px 22px;
-      font-size: 16px;
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      min-width: 140px;
-      max-width: 100%;
-    }
-
-    /* Botões padrão amarelos */
-    .botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
-      background-color: #FFD600;
-      color: #000;
-    }
-
-    .botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
-      background-color: #FFC400;
-      transform: translateY(-2px);
-    }
-
-    /* Botões críticos */
-    #botaoCancelar,
-    #botaoFinalizar {
-      background-color: #DC3545;
-      color: #FFF;
-    }
-
-    #botaoCancelar:hover,
-    #botaoFinalizar:hover {
-      background-color: #A71D2A;
-      transform: translateY(-2px);
-    }
-
-    /* Rodapé */
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 14px;
-      color: #777;
-      padding: 20px 10px;
-    }
-  </style>
 </head>
 
 <body>
@@ -88,22 +21,11 @@
       <label for="destino">🎯 Destino final:</label>
       <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
 
-      <!-- Campos ocultos que continuam funcionando -->
-      <div class="invisivel">
-        <label for="campoTaxaMinima">Taxa mínima (R$):</label>
-        <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
-
-        <label for="campoValorPorKm">Valor por km (R$):</label>
-        <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
-      </div>
-
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
-        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
-        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
       </div>
     </form>
 
@@ -111,10 +33,6 @@
     <div id="resultadoCorrida" role="region" aria-live="polite"></div>
     <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
   </main>
-
-  <footer>
-    © 2025 ViaSimples. Todos os direitos reservados.
-  </footer>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -132,10 +50,8 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- Script principal do simulador -->
-  <script src="03-simulador-script.js?v=1.0.0"></script>
-
-  <!-- Google Maps com Places API -->
+  <script src="03-simulador-script.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
+
