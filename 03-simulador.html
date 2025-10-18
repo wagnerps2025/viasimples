@@ -10,64 +10,14 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <link rel="stylesheet" href="style-viasimples.css/>
+  <link rel="stylesheet" href="style-viasimples.css?v=1.1.0" />
 
   <style>
     .invisivel {
       display: none !important;
     }
 
-    .botoes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 30px;
-      justify-content: center;
-    }
-
-    .botoes button {
-      flex: 1 1 45%;
-      padding: 14px 22px;
-      font-size: 16px;
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      min-width: 140px;
-      max-width: 100%;
-    }
-
-    .botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
-      background-color: #FFD600;
-      color: #000;
-    }
-
-    .botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
-      background-color: #FFC400;
-      transform: translateY(-2px);
-    }
-
-    #botaoCancelar,
-    #botaoFinalizar {
-      background-color: #DC3545;
-      color: #FFF;
-      flex: 1 1 100%;
-    }
-
-    #botaoCancelar:hover,
-    #botaoFinalizar:hover {
-      background-color: #A71D2A;
-      transform: translateY(-2px);
-    }
-
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 14px;
-      color: #777;
-      padding: 20px 10px;
-    }
+    
   </style>
 </head>
 
@@ -134,4 +84,5 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
+
 
