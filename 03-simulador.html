@@ -1,18 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulador de Corrida - ViaSimples</title>
-
-  <!-- Evita cache agressivo no celular -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
-  <link rel="stylesheet" href="style-viasimples.css?v=1.0.0" />
-
-  <style>
+<style>
     .invisivel {
       display: none !important;
     }
@@ -74,66 +60,3 @@ footer {
 }
 
   </style>
-</head>
-
-<body>
-  <main class="container">
-    <h1>Simule sua corrida</h1>
-
-    <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
-      <label for="nomePassageiro">👤 Seu nome completo:</label>
-      <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira" />
-
-      <label for="origem">📍 Local de partida:</label>
-      <input type="text" id="origem" name="origem" autocomplete="off" placeholder="Digite ou use localização atual" />
-
-      <label for="destino">🎯 Destino final:</label>
-      <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
-
-      <div class="invisivel">
-        <label for="campoTaxaMinima">Taxa mínima (R$):</label>
-        <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
-
-        <label for="campoValorPorKm">Valor por km (R$):</label>
-        <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
-      </div>
-
-      <div class="botoes">
-        <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
-        <button type="submit">🚗 Calcular corrida</button>
-        <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
-        <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
-        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
-        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
-      </div>
-    </form>
-
-    <div id="mapaGoogle"></div>
-    <div id="resultadoCorrida" role="region" aria-live="polite"></div>
-    <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
-  </main>
-
-  <footer>
-    © 2025 ViaSimples. Todos os direitos reservados.
-  </footer>
-
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
-      authDomain: "viasimples-9d340.firebaseapp.com",
-      projectId: "viasimples-9d340",
-      storageBucket: "viasimples-9d340.appspot.com",
-      messagingSenderId: "372389283187",
-      appId: "1:372389283187:web:139f81f5224bb0958e7106"
-    };
-    firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore();
-  </script>
-
-  <script src="03-simulador-script.js?v=1.0.0"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
-</body>
-</html>
-
