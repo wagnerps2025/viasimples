@@ -1,4 +1,4 @@
-/* === Reset global === */
+/* === Reset básico === */
 * {
   margin: 0;
   padding: 0;
@@ -10,7 +10,7 @@
 body {
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
   background-color: #F5F6F8;
-  color: #1C1C1C;
+  color: #212121;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -19,17 +19,17 @@ body {
 .container {
   max-width: 720px;
   margin: 40px auto;
-  padding: 32px;
-  background-color: #FFFFFF;
+  padding: 30px;
+  background-color: #FFF;
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* === Título principal === */
 h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #111;
+  color: #1A1A1A;
   margin-bottom: 24px;
   text-align: center;
 }
@@ -65,37 +65,34 @@ select:focus {
   outline: none;
 }
 
-/* === Agrupamento de botões === */
+/* === Botões agrupados === */
 .botoes {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 12px;
+  margin-top: 30px;
   justify-content: center;
 }
 
 /* === Botões padrão === */
 .botoes button {
-  width: 100%;
-  max-width: 240px;
-  padding: 16px 28px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: center;
-  white-space: nowrap;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
   background-color: #FFD600;
   color: #000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border: none;
+  padding: 14px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  min-width: 140px;
+  flex: 1 1 45%;
+  max-width: 100%;
 }
 
 .botoes button:hover {
   background-color: #FFC400;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* === Botões de ação crítica === */
@@ -103,18 +100,11 @@ select:focus {
 #botaoFinalizar {
   background-color: #DC3545;
   color: #FFF;
-  width: 100%;
-  max-width: 240px;
-  padding: 16px 28px;
-  font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 #botaoCancelar:hover,
 #botaoFinalizar:hover {
   background-color: #A71D2A;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* === Mapa Google === */
@@ -154,7 +144,7 @@ select:focus {
 }
 
 .motorista-card.ativo {
-  background-color: #FFF8E1;
+  background-color: #E3F2FD;
 }
 
 .motorista-card strong {
@@ -180,15 +170,6 @@ select:focus {
   background-color: #FFC400;
 }
 
-/* === Rodapé === */
-footer {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 14px;
-  color: #777;
-  padding: 20px 10px;
-}
-
 /* === Responsivo para telas menores === */
 @media (max-width: 600px) {
   .container {
@@ -202,7 +183,8 @@ footer {
 
   .botoes button {
     font-size: 15px;
-    max-width: 100%;
+    flex: 1 1 100%;
+    min-width: 100%;
   }
 
   #mapaGoogle {
