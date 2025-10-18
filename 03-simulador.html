@@ -10,67 +10,11 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
+  <link rel="stylesheet" href="style-viasimples.css?v=1.0.0" />
+
   <style>
-    /* === Reset básico === */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-      background-color: #F5F6F8;
-      color: #212121;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 30px;
-      background-color: #FFF;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1A1A1A;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 15px;
-      display: block;
-      margin: 20px 0 8px;
-      color: #333;
-    }
-
-    input[type="text"],
-    input[type="tel"],
-    input[type="email"],
-    input[type="password"],
-    input[type="number"],
-    select {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #DADCE0;
-      border-radius: 12px;
-      background-color: #FFF;
-      font-size: 15px;
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #FFD600;
-      outline: none;
+    .invisivel {
+      display: none !important;
     }
 
     .botoes {
@@ -92,11 +36,14 @@
       transition: background-color 0.3s ease, transform 0.2s ease;
       min-width: 140px;
       max-width: 100%;
+    }
+
+    .botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
       background-color: #FFD600;
       color: #000;
     }
 
-    .botoes button:hover {
+    .botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
       background-color: #FFC400;
       transform: translateY(-2px);
     }
@@ -114,95 +61,12 @@
       transform: translateY(-2px);
     }
 
-    #mapaGoogle {
-      width: 100%;
-      height: 400px;
-      min-height: 300px;
-      margin-top: 30px;
-      border-radius: 12px;
-      border: 1px solid #DDD;
-      background-color: #EEE;
-      overflow: hidden;
-    }
-
-    #resultadoCorrida {
-      margin-top: 25px;
-      font-size: 16px;
-      font-weight: 500;
-      text-align: center;
-      color: #333;
-    }
-
-    #listaMotoristas {
-      margin-top: 30px;
-    }
-
-    .motorista-card {
-      background-color: #FFF;
-      border: 1px solid #E0E0E0;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    }
-
-    .motorista-card.ativo {
-      background-color: #E3F2FD;
-    }
-
-    .motorista-card strong {
-      font-size: 18px;
-      color: #1A1A1A;
-    }
-
-    .motorista-card button {
-      margin-top: 12px;
-      background-color: #FFD600;
-      color: #000;
-      font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      transition: background-color 0.3s ease;
-    }
-
-    .motorista-card button:hover {
-      background-color: #FFC400;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        margin: 20px;
-        padding: 20px;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      .botoes button {
-        font-size: 15px;
-        flex: 1 1 100%;
-        min-width: 100%;
-      }
-
-      #mapaGoogle {
-        height: 300px;
-      }
-    }
-
     footer {
       margin-top: 40px;
       text-align: center;
       font-size: 14px;
       color: #777;
       padding: 20px 10px;
-    }
-
-    .invisivel {
-      display: none !important;
     }
   </style>
 </head>
@@ -224,6 +88,7 @@
       <div class="invisivel">
         <label for="campoTaxaMinima">Taxa mínima (R$):</label>
         <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
+
         <label for="campoValorPorKm">Valor por km (R$):</label>
         <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
       </div>
@@ -253,7 +118,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-        const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
       authDomain: "viasimples-9d340.firebaseapp.com",
       projectId: "viasimples-9d340",
@@ -265,10 +130,7 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- Script principal do simulador -->
   <script src="03-simulador-script.js?v=1.0.0"></script>
-
-  <!-- Google Maps com Places API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
