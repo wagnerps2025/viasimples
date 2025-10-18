@@ -12,10 +12,12 @@
 
   <link rel="stylesheet" href="style-viasimples.css" />
   <style>
+    /* Oculta campos sensíveis */
     .invisivel {
       display: none !important;
     }
 
+    /* Agrupamento de botões */
     .botoes {
       display: flex;
       flex-wrap: wrap;
@@ -37,6 +39,7 @@
       max-width: 100%;
     }
 
+    /* Botões padrão amarelos */
     .botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
       background-color: #FFD600;
       color: #000;
@@ -47,11 +50,11 @@
       transform: translateY(-2px);
     }
 
+    /* Botões críticos */
     #botaoCancelar,
     #botaoFinalizar {
       background-color: #DC3545;
       color: #FFF;
-      flex: 1 1 100%;
     }
 
     #botaoCancelar:hover,
@@ -60,6 +63,7 @@
       transform: translateY(-2px);
     }
 
+    /* Rodapé */
     footer {
       margin-top: 40px;
       text-align: center;
@@ -84,6 +88,7 @@
       <label for="destino">🎯 Destino final:</label>
       <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
 
+      <!-- Campos ocultos que continuam funcionando -->
       <div class="invisivel">
         <label for="campoTaxaMinima">Taxa mínima (R$):</label>
         <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
@@ -97,9 +102,6 @@
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
-      </div>
-
-      <div class="botoes">
         <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
         <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
       </div>
@@ -114,6 +116,7 @@
     © 2025 ViaSimples. Todos os direitos reservados.
   </footer>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -129,7 +132,10 @@
     window.db = firebase.firestore();
   </script>
 
+  <!-- Script principal do simulador -->
   <script src="03-simulador-script.js?v=1.0.0"></script>
+
+  <!-- Google Maps com Places API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
