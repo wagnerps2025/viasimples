@@ -1,62 +1,135 @@
-<style>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Corrida - ViaSimples</title>
+
+  <!-- Evita cache agressivo no celular -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link rel="stylesheet" href="style-viasimples.css" />
+  <style>
     .invisivel {
       display: none !important;
     }
 
     .botoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 30px;
-  justify-content: center;
-}
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+      justify-content: center;
+    }
 
-.botoes button {
-  width: 100%;
-  max-width: 240px;
-  padding: 16px 28px;
-  font-size: 16px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  text-align: center;
-  white-space: nowrap;
-}
+    .botoes button {
+      flex: 1 1 45%;
+      padding: 14px 22px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      min-width: 140px;
+      max-width: 100%;
+    }
 
-.botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
-  background-color: #FFD600;
-  color: #000;
-}
+    .botoes button:not(#botaoCancelar):not(#botaoFinalizar) {
+      background-color: #FFD600;
+      color: #000;
+    }
 
-.botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
-  background-color: #FFC400;
-  transform: translateY(-2px);
-}
+    .botoes button:not(#botaoCancelar):not(#botaoFinalizar):hover {
+      background-color: #FFC400;
+      transform: translateY(-2px);
+    }
 
-#botaoCancelar,
-#botaoFinalizar {
-  background-color: #DC3545;
-  color: #FFF;
-  width: 100%;
-  max-width: 240px;
-  padding: 16px 28px;
-  font-size: 16px;
-}
+    #botaoCancelar,
+    #botaoFinalizar {
+      background-color: #DC3545;
+      color: #FFF;
+      flex: 1 1 100%;
+    }
 
-#botaoCancelar:hover,
-#botaoFinalizar:hover {
-  background-color: #A71D2A;
-  transform: translateY(-2px);
-}
+    #botaoCancelar:hover,
+    #botaoFinalizar:hover {
+      background-color: #A71D2A;
+      transform: translateY(-2px);
+    }
 
-footer {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 14px;
-  color: #777;
-  padding: 20px 10px;
-}
-
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+      padding: 20px 10px;
+    }
   </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Simule sua corrida</h1>
+
+    <form id="formSimulador" onsubmit="event.preventDefault(); calcularCorrida();" novalidate>
+      <label for="nomePassageiro">👤 Seu nome completo:</label>
+      <input type="text" id="nomePassageiro" name="nomePassageiro" required autocomplete="name" placeholder="Ex: Wagner Oliveira" />
+
+      <label for="origem">📍 Local de partida:</label>
+      <input type="text" id="origem" name="origem" autocomplete="off" placeholder="Digite ou use localização atual" />
+
+      <label for="destino">🎯 Destino final:</label>
+      <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
+
+      <div class="invisivel">
+        <label for="campoTaxaMinima">Taxa mínima (R$):</label>
+        <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
+
+        <label for="campoValorPorKm">Valor por km (R$):</label>
+        <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
+      </div>
+
+      <div class="botoes">
+        <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
+        <button type="submit">🚗 Calcular corrida</button>
+        <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
+        <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+      </div>
+
+      <div class="botoes">
+        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
+        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
+      </div>
+    </form>
+
+    <div id="mapaGoogle"></div>
+    <div id="resultadoCorrida" role="region" aria-live="polite"></div>
+    <section id="listaMotoristas" aria-label="Escolha de motorista"></section>
+  </main>
+
+  <footer>
+    © 2025 ViaSimples. Todos os direitos reservados.
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+  </script>
+
+  <script src="03-simulador-script.js?v=1.0.0"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
