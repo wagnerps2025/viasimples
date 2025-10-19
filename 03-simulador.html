@@ -21,11 +21,24 @@
       <label for="destino">🎯 Destino final:</label>
       <input type="text" id="destino" name="destino" required autocomplete="off" placeholder="Ex: Av. Paulista, São Paulo" />
 
+      <div class="invisivel">
+        <label for="campoTaxaMinima">Taxa mínima (R$):</label>
+        <input type="number" id="campoTaxaMinima" name="campoTaxaMinima" autocomplete="off" readonly />
+
+        <label for="campoValorPorKm">Valor por km (R$):</label>
+        <input type="number" id="campoValorPorKm" name="campoValorPorKm" autocomplete="off" readonly />
+      </div>
+
       <div class="botoes">
         <button type="button" onclick="usarLocalizacao()">📍 Usar localização atual</button>
         <button type="submit">🚗 Calcular corrida</button>
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
+      </div>
+
+      <div class="botoes">
+        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
+        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
       </div>
     </form>
 
@@ -47,24 +60,59 @@
       appId: "1:372389283187:web:139f81f5224bb0958e7106"
     };
     firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore();
-  </script>
+    const db = firebase.firestore();
 
-  <!-- Função initMap para Google Maps -->
-  <script>
+    // Busca os valores atualizados da configuração no Firebase
+    async function carregarConfiguracao() {
+      try {
+        const doc = await db.collection("configuracao").doc("valores").get();
+        if (doc.exists) {
+          const dados = doc.data();
+          document.getElementById("campoTaxaMinima").value = dados.taxaMinima || 0;
+          document.getElementById("campoValorPorKm").value = dados.valorPorKm || 0;
+        } else {
+          console.warn("Documento de configuração não encontrado.");
+        }
+      } catch (error) {
+        console.error("Erro ao carregar configuração:", error);
+      }
+    }
+
+    // Função para usar localização atual
+    function usarLocalizacao() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (posicao) => {
+            const { latitude, longitude } = posicao.coords;
+            document.getElementById("origem").value = `Lat: ${latitude.toFixed(5)}, Lng: ${longitude.toFixed(5)}`;
+          },
+          (erro) => {
+            alert("Não foi possível obter sua localização.");
+            console.error("Erro de geolocalização:", erro);
+          }
+        );
+      } else {
+        alert("Geolocalização não é suportada neste navegador.");
+      }
+    }
+
+    // Inicializa o mapa
     function initMap() {
       const mapa = new google.maps.Map(document.getElementById("mapaGoogle"), {
-        center: { lat: -23.5505, lng: -46.6333 }, // São Paulo
+        center: { lat: -23.5505, lng: -46.6333 },
         zoom: 13,
       });
     }
     window.initMap = initMap;
+
+    // Carrega configuração ao abrir
+    window.addEventListener("DOMContentLoaded", carregarConfiguracao);
   </script>
 
   <!-- Script principal do simulador -->
   <script src="03-simulador-script.js" defer></script>
 
-  <!-- Google Maps API com callback -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
+  <!-- Google Maps API com boas práticas -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async" async defer></script>
 </body>
 </html>
