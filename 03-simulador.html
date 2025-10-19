@@ -27,11 +27,6 @@
         <button type="button" id="botaoSolicitar" style="display:none;" onclick="solicitarCorrida()">✅ Solicitar corrida</button>
         <button type="button" id="botaoLimpar" style="display:none;" onclick="limparCampos()">🧹 Limpar campos</button>
       </div>
-
-      <div class="botoes">
-        <button type="button" id="botaoCancelar" style="display:none;" onclick="cancelarCorrida()">❌ Cancelar corrida</button>
-        <button type="button" id="botaoFinalizar" style="display:none;" onclick="finalizarCorrida()">✅ Finalizar corrida</button>
-      </div>
     </form>
 
     <div id="mapaGoogle"></div>
@@ -55,92 +50,21 @@
     window.db = firebase.firestore();
   </script>
 
-  <!-- Simulador com cálculo real via Google Maps -->
+  <!-- Função initMap para Google Maps -->
   <script>
-    let mapa;
-    let directionsService;
-    let directionsRenderer;
-    let autocompleteOrigem;
-    let autocompleteDestino;
-
     function initMap() {
-      mapa = new google.maps.Map(document.getElementById("mapaGoogle"), {
-        center: { lat: -23.5505, lng: -46.6333 },
+      const mapa = new google.maps.Map(document.getElementById("mapaGoogle"), {
+        center: { lat: -23.5505, lng: -46.6333 }, // São Paulo
         zoom: 13,
       });
-
-      directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer();
-      directionsRenderer.setMap(mapa);
-
-      autocompleteOrigem = new google.maps.places.Autocomplete(document.getElementById("origem"));
-      autocompleteDestino = new google.maps.places.Autocomplete(document.getElementById("destino"));
     }
     window.initMap = initMap;
-
-    function usarLocalizacao() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (posicao) => {
-            const { latitude, longitude } = posicao.coords;
-            document.getElementById("origem").value = `${latitude}, ${longitude}`;
-          },
-          (erro) => {
-            alert("Não foi possível obter sua localização.");
-            console.error("Erro de geolocalização:", erro);
-          }
-        );
-      } else {
-        alert("Geolocalização não é suportada neste navegador.");
-      }
-    }
-
-    async function calcularCorrida() {
-      const origem = document.getElementById("origem").value;
-      const destino = document.getElementById("destino").value;
-
-      if (!origem || !destino) {
-        alert("Preencha origem e destino.");
-        return;
-      }
-
-      try {
-        const resultado = await directionsService.route({
-          origin: origem,
-          destination: destino,
-          travelMode: google.maps.TravelMode.DRIVING,
-        });
-
-        directionsRenderer.setDirections(resultado);
-
-        const rota = resultado.routes[0].legs[0];
-        const distanciaKm = rota.distance.value / 1000;
-        const duracaoTexto = rota.duration.text;
-
-        const doc = await window.db.collection("configuracao").doc("valores").get();
-        if (!doc.exists) {
-          alert("Configuração de valores não encontrada.");
-          return;
-        }
-
-        const dados = doc.data();
-        const taxaMinima = parseFloat(dados.taxaMinima) || 0;
-        const valorPorKm = parseFloat(dados.valorPorKm) || 0;
-        const valorCorrida = Math.max(taxaMinima, distanciaKm * valorPorKm);
-
-        document.getElementById("resultadoCorrida").textContent =
-          `Distância: ${distanciaKm.toFixed(2)} km • Tempo estimado: ${duracaoTexto} • Valor estimado: R$ ${valorCorrida.toFixed(2)}`;
-      } catch (erro) {
-        console.error("Erro ao calcular rota:", erro);
-        alert("Não foi possível calcular a rota.");
-      }
-    }
   </script>
 
   <!-- Script principal do simulador -->
   <script src="03-simulador-script.js" defer></script>
 
-  <!-- Google Maps API com Places e Directions -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async" async defer></script>
+  <!-- Google Maps API com callback -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
