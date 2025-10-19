@@ -1,11 +1,11 @@
-let mapaGoogle;
+let mapaGoogle, directionsService, directionsRenderer;
 let autocompleteOrigem, autocompleteDestino;
 let coordenadasOrigem = null;
 let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
 document.addEventListener("DOMContentLoaded", () => {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
@@ -29,9 +29,9 @@ window.initMap = function () {
     fullscreenControl: false,
   });
 
-  window.directionsService = new google.maps.DirectionsService();
-  window.directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
-  window.directionsRenderer.setMap(mapaGoogle);
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
+  directionsRenderer.setMap(mapaGoogle);
 
   const origemInput = document.getElementById("origem");
   const destinoInput = document.getElementById("destino");
@@ -76,22 +76,7 @@ window.usarLocalizacao = function () {
   );
 };
 
-async function obterConfiguracoesCorrida() {
-  try {
-    const doc = await window.db.collection("configuracoes").doc("valores").get();
-    if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
-    const dados = doc.data();
-    return {
-      taxaMinima: parseFloat(dados.taxaMinima) || 0,
-      valorPorKm: parseFloat(dados.valorPorKm) || 0
-    };
-  } catch (erro) {
-    console.error("Erro ao buscar configurações:", erro);
-    return { taxaMinima: 0, valorPorKm: 0 };
-  }
-}
-
-window.calcularCorrida = async function () {
+window.calcularCorrida = function () {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -111,12 +96,11 @@ window.calcularCorrida = async function () {
     travelMode: google.maps.TravelMode.DRIVING,
   };
 
-  window.directionsService.route(request, async (result, status) => {
+  directionsService.route(request, (result, status) => {
     if (status !== "OK") {
       alert("Erro ao calcular rota: " + status);
       return;
     }
-
 
     directionsRenderer.setDirections(result);
 
@@ -139,22 +123,10 @@ window.calcularCorrida = async function () {
   });
 };
 
-async function calcularValor(distanciaKm) {
-  try {
-    const doc = await db.collection("configuracao").doc("valores").get();
-    if (doc.exists) {
-      const dados = doc.data();
-      const taxaMinima = parseFloat(dados.taxaMinima) || 0;
-      const valorPorKm = parseFloat(dados.valorPorKm) || 0;
-      return Math.max(taxaMinima, distanciaKm * valorPorKm);
-    } else {
-      console.warn("Documento de configuração não encontrado.");
-      return 0;
-    }
-  } catch (erro) {
-    console.error("Erro ao buscar valores do Firebase:", erro);
-    return 0;
-  }
+function calcularValor(distanciaKm) {
+  const taxaMinima = 20,00;
+  const valorPorKm = 4,50;
+  return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
 
 async function listarMotoristasAtivos() {
@@ -321,7 +293,6 @@ window.limparCampos = function () {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
-
 
 
 
