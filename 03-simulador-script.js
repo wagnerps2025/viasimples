@@ -123,11 +123,24 @@ window.calcularCorrida = function () {
   });
 };
 
-function calcularValor(distanciaKm) {
-  const taxaMinima = 20,00;
-  const valorPorKm = 4,50;
-  return Math.max(taxaMinima, distanciaKm * valorPorKm);
+async function calcularValor(distanciaKm) {
+  try {
+    const doc = await db.collection("configuracao").doc("valores").get();
+    if (doc.exists) {
+      const dados = doc.data();
+      const taxaMinima = parseFloat(dados.taxaMinima) || 0;
+      const valorPorKm = parseFloat(dados.valorPorKm) || 0;
+      return Math.max(taxaMinima, distanciaKm * valorPorKm);
+    } else {
+      console.warn("Documento de configuração não encontrado.");
+      return 0;
+    }
+  } catch (erro) {
+    console.error("Erro ao buscar valores do Firebase:", erro);
+    return 0;
+  }
 }
+
 
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
@@ -293,6 +306,7 @@ window.limparCampos = function () {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
+
 
 
 
