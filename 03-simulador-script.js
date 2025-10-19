@@ -1,11 +1,11 @@
-let mapaGoogle, directionsService, directionsRenderer;
+let mapaGoogle;
 let autocompleteOrigem, autocompleteDestino;
 let coordenadasOrigem = null;
 let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
 document.addEventListener("DOMContentLoaded", () => {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
@@ -29,9 +29,9 @@ window.initMap = function () {
     fullscreenControl: false,
   });
 
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
-  directionsRenderer.setMap(mapaGoogle);
+  window.directionsService = new google.maps.DirectionsService();
+  window.directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
+  window.directionsRenderer.setMap(mapaGoogle);
 
   const origemInput = document.getElementById("origem");
   const destinoInput = document.getElementById("destino");
@@ -76,7 +76,22 @@ window.usarLocalizacao = function () {
   );
 };
 
-window.calcularCorrida = function () {
+async function obterConfiguracoesCorrida() {
+  try {
+    const doc = await window.db.collection("configuracoes").doc("valores").get();
+    if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
+    const dados = doc.data();
+    return {
+      taxaMinima: parseFloat(dados.taxaMinima) || 0,
+      valorPorKm: parseFloat(dados.valorPorKm) || 0
+    };
+  } catch (erro) {
+    console.error("Erro ao buscar configurações:", erro);
+    return { taxaMinima: 0, valorPorKm: 0 };
+  }
+}
+
+window.calcularCorrida = async function () {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -96,11 +111,12 @@ window.calcularCorrida = function () {
     travelMode: google.maps.TravelMode.DRIVING,
   };
 
-  directionsService.route(request, (result, status) => {
+  window.directionsService.route(request, async (result, status) => {
     if (status !== "OK") {
       alert("Erro ao calcular rota: " + status);
       return;
     }
+
 
     directionsRenderer.setDirections(result);
 
@@ -140,7 +156,6 @@ async function calcularValor(distanciaKm) {
     return 0;
   }
 }
-
 
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
