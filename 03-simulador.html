@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
-  <link rel="stylesheet" href="style-viasimples.css" />
+  <link rel="stylesheet" href="style-viasimples.css?v=1.0.1" />
 </head>
 
 <body>
@@ -50,8 +50,21 @@
     window.db = firebase.firestore();
   </script>
 
-  <script src="03-simulador-script.js"></script>
+  <!-- Função initMap para Google Maps -->
+  <script>
+    function initMap() {
+      const mapa = new google.maps.Map(document.getElementById("mapaGoogle"), {
+        center: { lat: -23.5505, lng: -46.6333 }, // São Paulo
+        zoom: 13,
+      });
+    }
+    window.initMap = initMap;
+  </script>
+
+  <!-- Script principal do simulador -->
+  <script src="03-simulador-script.js" defer></script>
+
+  <!-- Google Maps API com callback -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
-
