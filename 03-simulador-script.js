@@ -1,11 +1,11 @@
-let mapaGoogle, directionsService, directionsRenderer;
+let mapaGoogle;
 let autocompleteOrigem, autocompleteDestino;
 let coordenadasOrigem = null;
 let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 
-const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
 document.addEventListener("DOMContentLoaded", () => {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
@@ -29,9 +29,9 @@ window.initMap = function () {
     fullscreenControl: false,
   });
 
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
-  directionsRenderer.setMap(mapaGoogle);
+  window.directionsService = new google.maps.DirectionsService();
+  window.directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: false });
+  window.directionsRenderer.setMap(mapaGoogle);
 
   const origemInput = document.getElementById("origem");
   const destinoInput = document.getElementById("destino");
@@ -76,7 +76,22 @@ window.usarLocalizacao = function () {
   );
 };
 
-window.calcularCorrida = function () {
+async function obterConfiguracoesCorrida() {
+  try {
+    const doc = await window.db.collection("configuracoes").doc("valoresPadrao").get();
+    if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
+    const dados = doc.data();
+    return {
+      taxaMinima: parseFloat(dados.taxaMinima) || 0,
+      valorPorKm: parseFloat(dados.valorPorKm) || 0
+    };
+  } catch (erro) {
+    console.error("Erro ao buscar configurações:", erro);
+    return { taxaMinima: 0, valorPorKm: 0 };
+  }
+}
+
+window.calcularCorrida = async function () {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -96,13 +111,13 @@ window.calcularCorrida = function () {
     travelMode: google.maps.TravelMode.DRIVING,
   };
 
-  directionsService.route(request, (result, status) => {
+  window.directionsService.route(request, async (result, status) => {
     if (status !== "OK") {
       alert("Erro ao calcular rota: " + status);
       return;
     }
 
-    directionsRenderer.setDirections(result);
+    window.directionsRenderer.setDirections(result);
 
     const route = result.routes[0].legs[0];
     coordenadasOrigem = route.start_location;
@@ -110,7 +125,9 @@ window.calcularCorrida = function () {
 
     const distanciaKm = route.distance.value / 1000;
     const duracao = route.duration.text;
-    valorCorrida = calcularValor(distanciaKm);
+
+    const { taxaMinima, valorPorKm } = await obterConfiguracoesCorrida();
+    valorCorrida = Math.max(taxaMinima, distanciaKm * valorPorKm);
 
     document.getElementById("resultadoCorrida").innerHTML = `
       🛣️ Distância: ${route.distance.text}<br>
@@ -122,12 +139,6 @@ window.calcularCorrida = function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
-
-function calcularValor(distanciaKm) {
-  const taxaMinima = 20.00;
-  const valorPorKm = 4.50;
-  return Math.max(taxaMinima, distanciaKm * valorPorKm);
-}
 
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
@@ -218,7 +229,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   const latDestino = coordenadasDestino?.lat?.();
   const lngDestino = coordenadasDestino?.lng?.();
 
-    const linkOrigem = latOrigem && lngOrigem
+  const linkOrigem = latOrigem && lngOrigem
     ? `https://www.google.com/maps/search/?api=1&query=${latOrigem},${lngOrigem}`
     : "";
   const linkDestino = latDestino && lngDestino
@@ -289,11 +300,7 @@ window.limparCampos = function () {
   document.getElementById("resultadoCorrida").innerHTML = "";
   document.getElementById("listaMotoristas").innerHTML = "";
   document.getElementById("botaoLimpar").style.display = "none";
-  directionsRenderer.setDirections({ routes: [] });
+  window.directionsRenderer.setDirections({ routes: [] });
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
-
-
-
-
