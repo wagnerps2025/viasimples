@@ -78,7 +78,11 @@ window.usarLocalizacao = function () {
 
 async function obterConfiguracoesCorrida() {
   try {
-    const doc = await window.db.collection("configuracoes").doc("valoresPadrao").get();
+    const doc = await window.db
+      .collection("configuracoes")
+      .doc("valoresPadrao")
+      .get({ source: "server" }); // força leitura do servidor
+
     if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
     const dados = doc.data();
     return {
@@ -139,7 +143,6 @@ window.calcularCorrida = async function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
-
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
