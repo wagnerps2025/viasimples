@@ -4,6 +4,7 @@ let coordenadasOrigem = null;
 let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
+let configuracoesCorrida = { taxaMinima: 0, valorPorKm: 0 };
 
 window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
@@ -20,9 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     listarMotoristasAtivos();
   }
 
-  // ✅ Revalida configurações ao iniciar
-  const { taxaMinima, valorPorKm } = await obterConfiguracoesCorrida();
-  console.log("Configuração atual:", { taxaMinima, valorPorKm });
+  // ✅ Carrega configurações atualizadas do Firebase
+  configuracoesCorrida = await obterConfiguracoesCorrida();
 });
 
 window.initMap = function () {
@@ -89,6 +89,7 @@ async function obterConfiguracoesCorrida() {
 
     if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
     const dados = doc.data();
+
     return {
       taxaMinima: parseFloat(dados.taxaMinima) || 0,
       valorPorKm: parseFloat(dados.valorPorKm) || 0
@@ -134,8 +135,8 @@ window.calcularCorrida = async function () {
     const distanciaKm = route.distance.value / 1000;
     const duracao = route.duration.text;
 
-    const { taxaMinima, valorPorKm } = await obterConfiguracoesCorrida();
-    valorCorrida = Math.max(taxaMinima, distanciaKm * valorPorKm);
+    // ✅ Usa os valores carregados da configuração
+    valorCorrida = Math.max(configuracoesCorrida.taxaMinima, distanciaKm * configuracoesCorrida.valorPorKm);
 
     document.getElementById("resultadoCorrida").innerHTML = `
       🛣️ Distância: ${route.distance.text}<br>
