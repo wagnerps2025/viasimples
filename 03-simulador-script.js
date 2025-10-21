@@ -7,7 +7,7 @@ let motoristaEmServico = null;
 
 window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
   if (corrida) {
     motoristaEmServico = corrida.motorista;
@@ -19,6 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     listarMotoristasAtivos();
   }
+
+  // ✅ Revalida configurações ao iniciar
+  const { taxaMinima, valorPorKm } = await obterConfiguracoesCorrida();
+  console.log("Configuração atual:", { taxaMinima, valorPorKm });
 });
 
 window.initMap = function () {
@@ -81,7 +85,7 @@ async function obterConfiguracoesCorrida() {
     const doc = await window.db
       .collection("configuracoes")
       .doc("valoresPadrao")
-      .get({ source: "server" }); // força leitura do servidor
+      .get({ source: "server" }); // ✅ ignora cache
 
     if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
     const dados = doc.data();
@@ -305,5 +309,8 @@ window.limparCampos = function () {
   document.getElementById("botaoLimpar").style.display = "none";
   window.directionsRenderer.setDirections({ routes: [] });
   motoristaEmServico = null;
+  coordenadasOrigem = null;
+  coordenadasDestino = null;
+  valorCorrida = 0;
   localStorage.removeItem("corridaAtiva");
 };
