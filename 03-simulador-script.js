@@ -124,8 +124,8 @@ window.calcularCorrida = function () {
 };
 
 function calcularValor(distanciaKm) {
-  const taxaMinima = 20,00;
-  const valorPorKm = 4,50;
+  const taxaMinima = 20.00;
+  const valorPorKm = 4.50;
   return Math.max(taxaMinima, distanciaKm * valorPorKm);
 }
 
@@ -293,6 +293,7 @@ window.limparCampos = function () {
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
 };
+
 
 
 
