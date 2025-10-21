@@ -20,3 +20,4 @@ function enviarSenha() {
 
   // Aqui você pode integrar com um serviço real de envio futuramente
 }
+
