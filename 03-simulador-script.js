@@ -233,12 +233,24 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   const numeroLimpo = telefoneBruto.replace(/\D+/g, "");
   const numeroWhatsApp = numeroLimpo.startsWith("55") ? numeroLimpo : "55" + numeroLimpo;
 
+  const latOrigem = coordenadasOrigem?.lat?.();
+  const lngOrigem = coordenadasOrigem?.lng?.();
+  const latDestino = coordenadasDestino?.lat?.();
+  const lngDestino = coordenadasDestino?.lng?.();
+
+  const linkOrigem = latOrigem && lngOrigem
+    ? `https://www.google.com/maps/search/?api=1&query=${latOrigem},${lngOrigem}`
+    : "";
+  const linkDestino = latDestino && lngDestino
+    ? `https://www.google.com/maps/search/?api=1&query=${latDestino},${lngDestino}`
+    : "";
+
   const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n` +
     `🛣️ Distância: ${distanciaTexto}\n` +
     `⏱️ Tempo estimado: ${duracaoTexto}\n` +
     `💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n\n` +
-    `📍 Origem: ${origem}\n(seguir ou buscar)\n\n` +
-    `🎯 Destino: ${destino}\n(entregar)`;
+    `📍 Origem: ${origem}\n🔗 ${linkOrigem} (buscar)\n\n` +
+    `🎯 Destino: ${destino}\n🔗 ${linkDestino} (entregar)`;
 
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
@@ -315,4 +327,5 @@ window.limparCampos = function () {
   duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
 };
+
 
