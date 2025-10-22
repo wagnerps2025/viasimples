@@ -5,6 +5,8 @@ let coordenadasDestino = null;
 let valorCorrida = 0;
 let motoristaEmServico = null;
 let configuracoesCorrida = { taxaMinima: 0, valorPorKm: 0 };
+let distanciaTexto = "";
+let duracaoTexto = "";
 
 window.db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
@@ -21,7 +23,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     listarMotoristasAtivos();
   }
 
-  // ✅ Carrega configurações atualizadas do Firebase
   configuracoesCorrida = await obterConfiguracoesCorrida();
 });
 
@@ -85,7 +86,7 @@ async function obterConfiguracoesCorrida() {
     const doc = await window.db
       .collection("configuracoes")
       .doc("valoresPadrao")
-      .get({ source: "server" }); // ✅ ignora cache
+      .get({ source: "server" });
 
     if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
     const dados = doc.data();
@@ -133,14 +134,14 @@ window.calcularCorrida = async function () {
     coordenadasDestino = route.end_location;
 
     const distanciaKm = route.distance.value / 1000;
-    const duracao = route.duration.text;
+    distanciaTexto = route.distance.text;
+    duracaoTexto = route.duration.text;
 
-    // ✅ Usa os valores carregados da configuração
     valorCorrida = Math.max(configuracoesCorrida.taxaMinima, distanciaKm * configuracoesCorrida.valorPorKm);
 
     document.getElementById("resultadoCorrida").innerHTML = `
-      🛣️ Distância: ${route.distance.text}<br>
-      ⏱️ Tempo estimado: ${duracao}<br>
+      🛣️ Distância: ${distanciaTexto}<br>
+      ⏱️ Tempo estimado: ${duracaoTexto}<br>
       💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}
     `;
 
@@ -244,7 +245,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     ? `https://www.google.com/maps/search/?api=1&query=${latDestino},${lngDestino}`
     : "";
 
-  const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
+  const mensagem = `Olá ${nomeMotorista}, sou ${nomePassageiro} e gostaria de solicitar uma corrida.\n\n🛣️ Distância: ${distanciaTexto}\n⏱️ Tempo estimado: ${duracaoTexto}\n💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n📍 Origem: ${origem}\n🔗 ${linkOrigem}\n🎯 Destino: ${destino}\n🔗 ${linkDestino}`;
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
 
@@ -266,6 +267,8 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
         origem,
         destino,
         valor: valorCorrida,
+        distancia: distanciaTexto,
+        duracao: duracaoTexto,
         data: new Date().toISOString()
       });
       console.log("✅ Corrida registrada no Firebase");
@@ -313,5 +316,7 @@ window.limparCampos = function () {
   coordenadasOrigem = null;
   coordenadasDestino = null;
   valorCorrida = 0;
+  distanciaTexto = "";
+  duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
 };
