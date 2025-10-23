@@ -7,14 +7,11 @@
 
   // Bloqueia alterações se o usuário for um motorista
   if (usuario === "motorista") {
-    // Desabilita todos os campos do formulário
     Array.from(form.elements).forEach(el => el.disabled = true);
 
-    // Oculta o botão de envio
     const botaoCadastrar = form.querySelector('button[type="submit"]');
     if (botaoCadastrar) botaoCadastrar.style.display = "none";
 
-    // Opcional: mensagem informativa
     mensagem.innerText = "🔒 Visualização apenas. Motoristas não podem alterar os dados.";
   }
 
@@ -99,6 +96,11 @@
       placa: document.getElementById("placa").value.trim().toUpperCase(),
       ativo: true
     };
+
+    // Se o motorista estiver ativo, adiciona o status operacional
+    if (motorista.ativo === true) {
+      motorista.statusOperacional = "disponível";
+    }
 
     const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
     lista.push(motorista);

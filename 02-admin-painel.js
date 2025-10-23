@@ -1,196 +1,105 @@
-// Firebase Firestore (assume que firebase já foi inicializado no HTML)
-const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
+<script>
+  const db = window.db || (firebase?.firestore ? firebase.firestore() : null);
 
-// Elementos da interface
-const listaContainer = document.getElementById("listaMotoristas");
-const semDados = document.getElementById("semDados");
-const campoBusca = document.getElementById("campoBusca");
-const tipoBusca = document.getElementById("tipoBusca");
+  const listaContainer = document.getElementById("listaMotoristas");
+  const semDados = document.getElementById("semDados");
+  const campoBusca = document.getElementById("campoBusca");
+  const tipoBusca = document.getElementById("tipoBusca");
 
-campoBusca?.addEventListener("keyup", filtrarMotoristas);
+  campoBusca?.addEventListener("keyup", filtrarMotoristas);
 
-// 🔄 Carrega motoristas do Firebase e sincroniza com localStorage
-async function carregarMotoristas() {
-  let locais = JSON.parse(localStorage.getItem("motoristas") || "[]");
-  const placasLocais = locais.map(m => m.placa);
-  let atualizados = [...locais];
+  // 🔄 Atualização em tempo real com o simulador
+  function iniciarMonitoramentoMotoristas() {
+    db.collection("motoristas").onSnapshot((snapshot) => {
+      const motoristas = [];
+      snapshot.forEach(doc => {
+        const dados = doc.data();
+        dados.firebaseId = doc.id;
+        motoristas.push(dados);
+      });
 
-  try {
-    const snapshot = await db.collection("motoristas").get();
-    snapshot.forEach(doc => {
-      const dados = doc.data();
-      dados.firebaseId = doc.id;
-
-      const indexLocal = atualizados.findIndex(m => m.placa === dados.placa);
-      if (indexLocal >= 0) {
-        atualizados[indexLocal] = { ...dados };
-      } else {
-        atualizados.push(dados);
-      }
-    });
-
-    // ✅ Ordena por ID numérico crescente, começando em 1
-    atualizados.sort((a, b) => {
-      const idA = Number(a.id);
-      const idB = Number(b.id);
-      if (isNaN(idA)) return 1;
-      if (isNaN(idB)) return -1;
-      return idA - idB;
-    });
-
-    localStorage.setItem("motoristas", JSON.stringify(atualizados));
-  } catch (error) {
-    console.error("⚠️ Erro ao carregar motoristas do Firebase:", error);
-  }
-
-  exibirMotoristas(atualizados);
-}
-
-// 🧾 Exibe motoristas na interface de administração
-function exibirMotoristas(motoristas) {
-  listaContainer.innerHTML = "";
-
-  if (!motoristas.length) {
-    semDados.style.display = "block";
-    return;
-  }
-
-  semDados.style.display = "none";
-
-  motoristas.forEach((motorista, index) => {
-    const card = document.createElement("div");
-    card.className = "motorista-card";
-
-    card.innerHTML = `
-      <label>ID:</label>
-      <input type="text" value="${motorista.id || ''}" id="id-${index}" disabled />
-
-      <label>Nome:</label>
-      <input type="text" value="${motorista.nome || ''}" id="nome-${index}" />
-
-      <label>Telefone:</label>
-      <input type="text" value="${motorista.telefone || ''}" id="telefone-${index}" />
-
-      <label>Marca:</label>
-      <input type="text" value="${motorista.marca || ''}" id="marca-${index}" />
-
-      <label>Modelo:</label>
-      <input type="text" value="${motorista.modelo || ''}" id="modelo-${index}" />
-
-      <label>Ano:</label>
-      <input type="number" value="${motorista.ano || ''}" id="ano-${index}" />
-
-      <label>Tipo de Placa:</label>
-      <input type="text" value="${motorista.tipoPlaca || ''}" id="tipoPlaca-${index}" />
-
-      <label>Placa:</label>
-      <input type="text" value="${motorista.placa || ''}" id="placa-${index}" />
-
-      <label>Status:</label>
-      <select id="ativo-${index}">
-        <option value="true" ${motorista.ativo ? "selected" : ""}>Ativo</option>
-        <option value="false" ${!motorista.ativo ? "selected" : ""}>Desativado</option>
-      </select>
-
-      <div class="botoes">
-        <button class="editar" onclick="editarMotorista(${index})">💾 Salvar</button>
-        <button class="excluir" onclick="excluirMotorista(${index})">🗑️ Excluir</button>
-      </div>
-    `;
-
-    listaContainer.appendChild(card);
-  });
-}
-
-// 💾 Edita e salva motorista no localStorage e Firebase
-async function editarMotorista(index) {
-  let motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
-  // Gera ID automaticamente se estiver vazio ou inválido
-  let idAtual = document.getElementById(`id-${index}`).value;
-  if (!idAtual || isNaN(Number(idAtual))) {
-    const idsExistentes = motoristas.map(m => Number(m.id)).filter(n => !isNaN(n));
-    const proximoId = idsExistentes.length ? Math.max(...idsExistentes) + 1 : 1;
-    idAtual = String(proximoId);
-  }
-
-  const motorista = {
-    id: idAtual,
-    nome: document.getElementById(`nome-${index}`).value.trim(),
-    telefone: document.getElementById(`telefone-${index}`).value.trim(),
-    marca: document.getElementById(`marca-${index}`).value.trim(),
-    modelo: document.getElementById(`modelo-${index}`).value.trim(),
-    ano: document.getElementById(`ano-${index}`).value.trim(),
-    tipoPlaca: document.getElementById(`tipoPlaca-${index}`).value.trim(),
-    placa: document.getElementById(`placa-${index}`).value.trim().toUpperCase(),
-    ativo: document.getElementById(`ativo-${index}`).value === "true",
-    firebaseId: motoristas[index].firebaseId || null
-  };
-
-  motoristas[index] = motorista;
-  localStorage.setItem("motoristas", JSON.stringify(motoristas));
-
-  try {
-    if (motorista.firebaseId) {
-      await db.collection("motoristas").doc(motorista.firebaseId).set(motorista);
-    } else {
-      const ref = await db.collection("motoristas").add(motorista);
-      motorista.firebaseId = ref.id;
-      motoristas[index].firebaseId = ref.id;
+      motoristas.sort((a, b) => Number(a.id) - Number(b.id));
       localStorage.setItem("motoristas", JSON.stringify(motoristas));
-    }
-    alert("✅ Motorista salvo com sucesso!");
-  } catch (error) {
-    console.error("❌ Erro ao salvar no Firebase:", error);
+      exibirMotoristas(motoristas);
+    });
   }
 
-  carregarMotoristas();
-}
+  function exibirMotoristas(motoristas) {
+    listaContainer.innerHTML = "";
 
-// 🗑️ Exclui motorista localmente e no Firebase
-async function excluirMotorista(index) {
-  const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-  const motorista = motoristas[index];
+    if (!motoristas.length) {
+      semDados.style.display = "block";
+      return;
+    }
 
-  if (confirm("Deseja realmente excluir este motorista?")) {
-    motoristas.splice(index, 1);
-    localStorage.setItem("motoristas", JSON.stringify(motoristas));
+    semDados.style.display = "none";
+
+    motoristas.forEach((motorista, index) => {
+      const card = document.createElement("div");
+      card.className = `motorista-card ${motorista.ativo ? "ativo" : "inativo"}`;
+
+      let statusTexto = "";
+      if (motorista.ativo) {
+        switch (motorista.statusOperacional) {
+          case "em_servico":
+            statusTexto = `<div class="motorista-status-texto" style="color: red; font-weight: bold;">🚧 Em serviço</div>`;
+            break;
+          case "disponivel":
+            statusTexto = `<div class="motorista-status-texto" style="color: green; font-weight: bold;">🟢 Disponível</div>`;
+            break;
+          default:
+            statusTexto = `<div class="motorista-status-texto" style="color: gray;">⏳ Status indefinido</div>`;
+        }
+      }
+
+      card.innerHTML = `
+        <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
+        <div class="motorista-nome">👤 ${motorista.nome}</div>
+        <div class="motorista-telefone">📞 ${motorista.telefone}</div>
+        <div class="motorista-status">🔧 Cadastro: ${motorista.ativo ? "Ativo" : "Inativo"}</div>
+        ${motorista.ativo ? statusTexto : ""}
+        <button class="botao-status" onclick="alterarStatus(${index})">
+          ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
+        </button>
+      `;
+
+      listaContainer.appendChild(card);
+    });
+  }
+
+  async function alterarStatus(index) {
+    const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    const motorista = motoristas[index];
+
+    motorista.ativo = !motorista.ativo;
 
     try {
       if (motorista.firebaseId) {
-        await db.collection("motoristas").doc(motorista.firebaseId).delete();
+        const atualizacao = {
+          ativo: motorista.ativo
+        };
+
+        if (motorista.ativo && !motorista.statusOperacional) {
+          atualizacao.statusOperacional = "disponivel";
+          motorista.statusOperacional = "disponivel";
+        }
+
+        if (!motorista.ativo) {
+          atualizacao.statusOperacional = firebase.firestore.FieldValue.delete();
+          delete motorista.statusOperacional;
+        }
+
+        await db.collection("motoristas").doc(motorista.firebaseId).update(atualizacao);
       }
+
+      motoristas[index] = motorista;
+      localStorage.setItem("motoristas", JSON.stringify(motoristas));
     } catch (error) {
-      console.error("❌ Erro ao excluir do Firebase:", error);
+      console.error("❌ Erro ao atualizar status no Firebase:", error);
+      alert("❌ Falha ao salvar status no banco de dados.");
     }
-
-    carregarMotoristas();
   }
-}
 
-// 🔍 Filtra motoristas por campo
-function filtrarMotoristas() {
-  const tipo = tipoBusca.value;
-  const termo = campoBusca.value.trim().toLowerCase();
-  const motoristas = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
-  const filtrados = motoristas.filter(m => {
-    const campo = m[tipo]?.toLowerCase();
-    return campo && campo.includes(termo);
-  });
-
-  // ✅ Ordena os filtrados por ID também
-  filtrados.sort((a, b) => {
-    const idA = Number(a.id);
-    const idB = Number(b.id);
-    if (isNaN(idA)) return 1;
-    if (isNaN(idB)) return -1;
-    return idA - idB;
-  });
-
-  exibirMotoristas(filtrados);
-}
-
-// 🚀 Inicializa ao carregar a página
-window.onload = carregarMotoristas;
-
+  // 🔁 Inicializa o monitoramento ao carregar a página
+  window.addEventListener("DOMContentLoaded", iniciarMonitoramentoMotoristas);
+</script>

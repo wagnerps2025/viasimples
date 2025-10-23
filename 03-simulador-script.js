@@ -20,10 +20,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       🎯 Destino: ${corrida.destino}<br>
       💰 Valor: R$ ${corrida.valor.toFixed(2)}
     `;
-    listarMotoristasAtivos();
   }
 
   configuracoesCorrida = await obterConfiguracoesCorrida();
+  listarMotoristasAtivos();
 });
 
 window.initMap = function () {
@@ -83,11 +83,7 @@ window.usarLocalizacao = function () {
 
 async function obterConfiguracoesCorrida() {
   try {
-    const doc = await window.db
-      .collection("configuracoes")
-      .doc("valoresPadrao")
-      .get({ source: "server" });
-
+    const doc = await db.collection("configuracoes").doc("valoresPadrao").get({ source: "server" });
     if (!doc.exists) throw new Error("Documento de configurações não encontrado.");
     const dados = doc.data();
 
@@ -149,6 +145,7 @@ window.calcularCorrida = async function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
+
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
@@ -158,7 +155,7 @@ async function listarMotoristasAtivos() {
   if (db) {
     try {
       const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
-      snapshot.forEach(doc => motoristas.push(doc.data()));
+      snapshot.forEach(doc => motoristas.push({ ...doc.data(), id: doc.id }));
     } catch (error) {
       console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
     }
@@ -177,45 +174,33 @@ async function listarMotoristasAtivos() {
   motoristas.forEach(motorista => {
     const card = document.createElement("div");
     card.className = "motorista-card ativo";
+
+    const emServico = motoristaEmServico === motorista.nome;
+    const statusTexto = motorista.statusOperacional === "em_servico"
+      ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
+      : `<div style="color: green; font-weight: bold;">🟢 Disponível</div>`;
+
     card.innerHTML = `
       <div><strong>👤 ${motorista.nome}</strong></div>
       <div>🏷️ Marca: ${motorista.marca}</div>
       <div>🚗 Modelo: ${motorista.modelo}</div>
-      <div>🚘 Tipo de carro: ${motorista["Tipo de carro"]}</div>
+      <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
       <div>📅 Ano: ${motorista.ano}</div>
       <div>🔠 Placa: ${motorista.placa}</div>
       <div>🎨 Cor: ${motorista.cor}</div>
       <div>📞 Telefone: ${motorista.telefone}</div>
+      ${statusTexto}
       ${
-        motoristaEmServico === motorista.nome
-          ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
-          : `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
+        !emServico
+          ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}', '${motorista.id}')">📲 Escolher este motorista</button>`
+          : ""
       }
     `;
     lista.appendChild(card);
   });
-
-  if (motoristaEmServico) {
-    const cancelarBtn = document.createElement("button");
-    cancelarBtn.textContent = "❌ Cancelar corrida";
-    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
-
-    const finalizarBtn = document.createElement("button");
-    finalizarBtn.textContent = "✅ Finalizar corrida";
-    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
-
-    cancelarBtn.onclick = cancelarMotorista;
-    finalizarBtn.onclick = finalizarCorrida;
-
-    const grupoBotoes = document.createElement("div");
-    grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap;";
-    grupoBotoes.appendChild(cancelarBtn);
-    grupoBotoes.appendChild(finalizarBtn);
-    lista.appendChild(grupoBotoes);
-  }
 }
 
-window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motoristaId) {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -249,8 +234,8 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     `🛣️ Distância: ${distanciaTexto}\n` +
     `⏱️ Tempo estimado: ${duracaoTexto}\n` +
     `💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n\n` +
-    `📍 Origem: ${origem}\n🔗 ${linkOrigem} (Iniciar Corrida)\n\n` +
-    `🎯 Destino: ${destino}\n🔗 ${linkDestino} (Finalizar Corrida)`;
+    `📍 Origem: ${origem}\n🔗 ${linkOrigem} (buscar)\n\n` +
+    `🎯 Destino: ${destino}\n🔗 ${linkDestino} (entregar)`;
 
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
@@ -263,6 +248,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
     destino,
     valor: valorCorrida
   }));
+
   listarMotoristasAtivos();
 
   if (db) {
@@ -277,15 +263,59 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
         duracao: duracaoTexto,
         data: new Date().toISOString()
       });
-      console.log("✅ Corrida registrada no Firebase");
+
+      // ✅ Atualiza corretamente o campo statusOperacional
+      await db.collection("motoristas").doc(motoristaId).update({
+        statusOperacional: "em_servico"
+      });
+
+      console.log("✅ Corrida registrada e status atualizado para em_servico");
     } catch (error) {
-      console.error("❌ Erro ao registrar corrida:", error);
+      console.error("❌ Erro ao registrar corrida ou atualizar statusOperacional:", error);
     }
   }
 };
 
 
+  listarMotoristasAtivos();
+
+  if (db) {
+    try {
+      await db.collection("corridas").add({
+        passageiro: nomePassageiro,
+        motorista: nomeMotorista,
+        origem,
+        destino,
+        valor: valorCorrida,
+        distancia: distanciaTexto,
+        duracao: duracaoTexto,
+        data: new Date().toISOString()
+      });
+
+      await db.collection("motoristas").doc(motoristaId).update({
+        statusOperacional: "em_servico"
+      });
+
+      console.log("✅ Corrida registrada e status atualizado");
+    } catch (error) {
+      console.error("❌ Erro ao registrar corrida ou atualizar status:", error);
+    }
+  }
+};
+
 function cancelarMotorista() {
+  const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
+  if (corrida && db) {
+    db.collection("motoristas")
+      .where("nome", "==", corrida.motorista)
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          doc.ref.update({ statusOperacional: "disponivel" });
+        });
+      });
+  }
+
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
   listarMotoristasAtivos();
@@ -302,7 +332,7 @@ function finalizarCorrida() {
       .get()
       .then(snapshot => {
         snapshot.forEach(doc => {
-          doc.ref.update({ status: "disponível" });
+          doc.ref.update({ statusOperacional: "disponivel" });
         });
       });
   }
@@ -327,6 +357,3 @@ window.limparCampos = function () {
   duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
 };
-
-
-
