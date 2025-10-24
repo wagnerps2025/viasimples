@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel de Motoristas - ViaSimples</title>
-  <link rel="stylesheet" href="style-viasimples.css">
-
+  <link rel="stylesheet" href="style-viasimples.css" />
   <style>
     .motorista-card {
       border: 1px solid #ccc;
@@ -14,47 +13,38 @@
       margin-bottom: 20px;
       transition: background-color 0.3s ease;
     }
-
     .motorista-card.ativo {
       background-color: #E3F2FD;
     }
-
     .motorista-card.inativo {
       background-color: #EEEEEE;
     }
-
     .motorista-id {
       font-size: 13px;
       font-weight: bold;
       color: #666;
       margin-bottom: 8px;
     }
-
     .motorista-nome {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 6px;
     }
-
     .motorista-telefone {
       font-size: 16px;
       margin-bottom: 6px;
     }
-
     .motorista-status {
       font-size: 15px;
       font-weight: bold;
       margin-bottom: 12px;
     }
-
     .motorista-status.ativo {
       color: #2E7D32;
     }
-
     .motorista-status.inativo {
       color: #C62828;
     }
-
     .botao-status {
       padding: 10px 16px;
       border: none;
@@ -64,11 +54,9 @@
       background-color: #FFD600;
       color: #000;
     }
-
     .botao-status:hover {
       background-color: #FFC400;
     }
-
     #semDados {
       text-align: center;
       font-weight: bold;
@@ -77,11 +65,9 @@
     }
   </style>
 </head>
-
 <body>
   <script>
     const usuario = localStorage.getItem("usuario");
-
     if (usuario !== "motorista" && usuario !== "admin") {
       document.write(`
         <main style="text-align:center; padding:60px; font-family:sans-serif;">
@@ -98,102 +84,17 @@
 
   <main class="container">
     <h1>Painel de Motoristas</h1>
-
     <section id="listaMotoristas" aria-label="Lista de motoristas cadastrados"></section>
-
     <div class="botoes">
       <button type="button" onclick="carregarMotoristas()">🔄 Atualizar lista</button>
     </div>
+	<div id="statusMotoristaPainel"></div>
+<button onclick="alternarStatusMotorista()">🔁 Alternar disponibilidade</button>
   </main>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
-      authDomain: "viasimples-9d340.firebaseapp.com",
-      projectId: "viasimples-9d340",
-      storageBucket: "viasimples-9d340.appspot.com",
-      messagingSenderId: "372389283187",
-      appId: "1:372389283187:web:139f81f5224bb0958e7106"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const podeEditar = localStorage.getItem("usuario") === "admin";
-    let motoristas = [];
-
-    async function carregarMotoristas() {
-      const lista = document.getElementById("listaMotoristas");
-      lista.innerHTML = "";
-
-      try {
-        const snapshot = await db.collection("motoristas").get();
-        motoristas = [];
-        snapshot.forEach(doc => {
-          const dados = doc.data();
-          dados.firebaseId = doc.id;
-          motoristas.push(dados);
-        });
-
-        if (motoristas.length === 0) {
-          lista.innerHTML = "<p id='semDados'>Nenhum motorista cadastrado.</p>";
-          return;
-        }
-
-        motoristas.forEach((motorista, index) => {
-          const card = document.createElement("div");
-          card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
-
-          let botaoHTML = "";
-          if (podeEditar) {
-            botaoHTML = `
-              <button class="botao-status" onclick="alterarStatus(${index})">
-                ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
-              </button>
-            `;
-          }
-
-          card.innerHTML = `
-            <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
-            <div class="motorista-nome">👤 ${motorista.nome}</div>
-            <div class="motorista-telefone">📞 ${motorista.telefone}</div>
-            <div class="motorista-status ${motorista.ativo ? 'ativo' : 'inativo'}">
-              🔧 Status: ${motorista.ativo ? "Ativo" : "Inativo"}
-            </div>
-            ${botaoHTML}
-          `;
-
-          lista.appendChild(card);
-        });
-
-        localStorage.setItem("motoristas", JSON.stringify(motoristas));
-      } catch (error) {
-        console.error("Erro ao carregar motoristas:", error);
-        lista.innerHTML = "<p id='semDados'>Erro ao carregar dados.</p>";
-      }
-    }
-
-    async function alterarStatus(index) {
-      if (!podeEditar) return;
-
-      const motorista = motoristas[index];
-      motorista.ativo = !motorista.ativo;
-
-      try {
-        await db.collection("motoristas").doc(motorista.firebaseId).update({ ativo: motorista.ativo });
-        motoristas[index] = motorista;
-        localStorage.setItem("motoristas", JSON.stringify(motoristas));
-        carregarMotoristas();
-      } catch (error) {
-        console.error("Erro ao atualizar status no Firebase:", error);
-        alert("❌ Falha ao salvar status no banco de dados.");
-      }
-    }
-
-    window.onload = carregarMotoristas;
-  </script>
+  <script src="02-admin-painel.js"></script>
 </body>
 </html>
