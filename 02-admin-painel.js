@@ -99,7 +99,67 @@
       alert("❌ Falha ao salvar status no banco de dados.");
     }
   }
+  
+  async function alternarStatusMotorista() {
+  const user = firebase.auth().currentUser;
+  if (!user) return alert("Você precisa estar logado.");
+
+  try {
+    const snapshot = await db.collection("motoristas").where("uid", "==", user.uid).get();
+    if (snapshot.empty) return alert("Motorista não encontrado.");
+
+    const doc = snapshot.docs[0];
+    const dados = doc.data();
+    const novoStatus = !dados.ativo;
+
+    const atualizacao = {
+      ativo: novoStatus
+    };
+
+    if (novoStatus && !dados.statusOperacional) {
+      atualizacao.statusOperacional = "disponivel";
+    }
+
+    if (!novoStatus) {
+      atualizacao.statusOperacional = firebase.firestore.FieldValue.delete();
+    }
+
+    await doc.ref.update(atualizacao);
+
+    document.getElementById("statusMotoristaPainel").innerHTML =
+      `🟢 Seu status agora é: <strong>${novoStatus ? "Ativo" : "Inativo"}</strong>`;
+  } catch (error) {
+    console.error("❌ Erro ao alternar status:", error);
+    alert("Erro ao atualizar status.");
+  }
+}
+
+async function exibirStatusMotorista() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  try {
+    const snapshot = await db.collection("motoristas").where("uid", "==", user.uid).get();
+    if (snapshot.empty) return;
+
+    const dados = snapshot.docs[0].data();
+    const status = dados.ativo ? "Ativo" : "Inativo";
+
+    document.getElementById("statusMotoristaPainel").innerHTML =
+      `🟢 Seu status atual: <strong>${status}</strong>`;
+  } catch (error) {
+    console.error("Erro ao buscar status do motorista:", error);
+  }
+}
+
+firebase.auth().onAuthStateChanged(() => {
+  exibirStatusMotorista();
+});
+
 
   // 🔁 Inicializa o monitoramento ao carregar a página
   window.addEventListener("DOMContentLoaded", iniciarMonitoramentoMotoristas);
 </script>
+
+
+
