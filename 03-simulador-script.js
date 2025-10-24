@@ -20,10 +20,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       🎯 Destino: ${corrida.destino}<br>
       💰 Valor: R$ ${corrida.valor.toFixed(2)}
     `;
+    listarMotoristasAtivos();
   }
 
   configuracoesCorrida = await obterConfiguracoesCorrida();
-  listarMotoristasAtivos();
 });
 
 window.initMap = function () {
@@ -145,7 +145,6 @@ window.calcularCorrida = async function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
-
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
@@ -155,7 +154,7 @@ async function listarMotoristasAtivos() {
   if (db) {
     try {
       const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
-      snapshot.forEach(doc => motoristas.push({ ...doc.data(), id: doc.id }));
+      snapshot.forEach(doc => motoristas.push(doc.data()));
     } catch (error) {
       console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
     }
@@ -176,9 +175,9 @@ async function listarMotoristasAtivos() {
     card.className = "motorista-card ativo";
 
     const emServico = motoristaEmServico === motorista.nome;
-    const statusTexto = motorista.statusOperacional === "em_servico"
+    const statusTexto = emServico
       ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
-      : `<div style="color: green; font-weight: bold;">🟢 Disponível</div>`;
+      : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
 
     card.innerHTML = `
       <div><strong>👤 ${motorista.nome}</strong></div>
@@ -192,15 +191,35 @@ async function listarMotoristasAtivos() {
       ${statusTexto}
       ${
         !emServico
-          ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}', '${motorista.id}')">📲 Escolher este motorista</button>`
+          ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
           : ""
       }
     `;
+
     lista.appendChild(card);
   });
+
+  if (motoristaEmServico) {
+    const cancelarBtn = document.createElement("button");
+    cancelarBtn.textContent = "❌ Cancelar corrida";
+    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+
+    const finalizarBtn = document.createElement("button");
+    finalizarBtn.textContent = "✅ Finalizar corrida";
+    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+
+    cancelarBtn.onclick = cancelarMotorista;
+    finalizarBtn.onclick = finalizarCorrida;
+
+    const grupoBotoes = document.createElement("div");
+    grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap;";
+    grupoBotoes.appendChild(cancelarBtn);
+    grupoBotoes.appendChild(finalizarBtn);
+    lista.appendChild(grupoBotoes);
+  }
 }
 
-window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motoristaId) {
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -248,7 +267,6 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motor
     destino,
     valor: valorCorrida
   }));
-
   listarMotoristasAtivos();
 
   if (db) {
@@ -264,36 +282,9 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motor
         data: new Date().toISOString()
       });
 
-      // ✅ Atualiza corretamente o campo statusOperacional
-      await db.collection("motoristas").doc(motoristaId).update({
-        statusOperacional: "em_servico"
-      });
-
-      console.log("✅ Corrida registrada e status atualizado para em_servico");
-    } catch (error) {
-      console.error("❌ Erro ao registrar corrida ou atualizar statusOperacional:", error);
-    }
-  }
-};
-
-
-  listarMotoristasAtivos();
-
-  if (db) {
-    try {
-      await db.collection("corridas").add({
-        passageiro: nomePassageiro,
-        motorista: nomeMotorista,
-        origem,
-        destino,
-        valor: valorCorrida,
-        distancia: distanciaTexto,
-        duracao: duracaoTexto,
-        data: new Date().toISOString()
-      });
-
-      await db.collection("motoristas").doc(motoristaId).update({
-        statusOperacional: "em_servico"
+      const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
+      snapshot.forEach(doc => {
+        doc.ref.update({ statusAtual: "em_servico" });
       });
 
       console.log("✅ Corrida registrada e status atualizado");
@@ -311,7 +302,7 @@ function cancelarMotorista() {
       .get()
       .then(snapshot => {
         snapshot.forEach(doc => {
-          doc.ref.update({ statusOperacional: "disponivel" });
+          doc.ref.update({ statusAtual: "aguardando" });
         });
       });
   }
@@ -332,7 +323,7 @@ function finalizarCorrida() {
       .get()
       .then(snapshot => {
         snapshot.forEach(doc => {
-          doc.ref.update({ statusOperacional: "disponivel" });
+          doc.ref.update({ statusAtual: "aguardando" });
         });
       });
   }
