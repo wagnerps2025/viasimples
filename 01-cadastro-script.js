@@ -2,6 +2,7 @@
   const form = document.getElementById("formMotorista");
   const mensagem = document.getElementById("mensagemCadastro");
   const contador = document.getElementById("contadorMotoristas");
+  const botaoSalvarFirebase = document.getElementById("salvarFirebase");
 
   const usuario = localStorage.getItem("usuario");
 
@@ -9,6 +10,7 @@
     Array.from(form.elements).forEach(el => el.disabled = true);
     const botaoCadastrar = form.querySelector('button[type="submit"]');
     if (botaoCadastrar) botaoCadastrar.style.display = "none";
+    if (botaoSalvarFirebase) botaoSalvarFirebase.style.display = "none";
     mensagem.innerText = "🔒 Visualização apenas. Motoristas não podem alterar os dados.";
   }
 
@@ -41,7 +43,7 @@
   }
 
   function gerarIdSequencial() {
-    return "M" + String(Date.now()).slice(-6); // ID com prefixo e timestamp
+    return "M" + String(Date.now()).slice(-6);
   }
 
   ["nome", "marca", "modelo", "cor"].forEach(id => {
@@ -58,53 +60,64 @@
     e.target.value = formatarPlaca(e.target.value);
   });
 
-  form.addEventListener("submit", async function (e) {
+  // Botão de cadastro (prepara motorista e salva no localStorage)
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
 
     const placaFormatada = document.getElementById("placa").value.trim().toUpperCase();
     const idGerado = gerarIdSequencial();
 
+    const motorista = {
+      id: idGerado,
+      nome: document.getElementById("nome").value.trim(),
+      telefone: document.getElementById("telefone").value.trim(),
+      marca: document.getElementById("marca").value.trim(),
+      modelo: document.getElementById("modelo").value.trim(),
+      cor: document.getElementById("cor").value.trim(),
+      "Tipo de carro": document.getElementById("tipoCarro").value,
+      ano: document.getElementById("ano").value.trim(),
+      tipoPlaca: document.getElementById("tipoPlaca").value,
+      placa: placaFormatada,
+      ativo: true,
+      statusOperacional: "disponível"
+    };
+
+    localStorage.setItem("motoristaTemp", JSON.stringify(motorista));
+    mensagem.innerText = `📝 Motorista ${motorista.nome} preparado para salvar. Clique em "Salvar no Firebase".`;
+  });
+
+  // Botão "Salvar no Firebase"
+  botaoSalvarFirebase.addEventListener("click", async () => {
+    const motoristaSalvo = localStorage.getItem("motoristaTemp");
+    if (!motoristaSalvo) {
+      mensagem.innerText = "⚠️ Nenhum motorista preparado para salvar.";
+      return;
+    }
+
+    const motorista = JSON.parse(motoristaSalvo);
+
     try {
-      // Verifica se já existe motorista com a mesma placa
       const placaDuplicada = await db.collection("motoristas")
-        .where("placa", "==", placaFormatada)
+        .where("placa", "==", motorista.placa)
         .get();
+
+      const idRef = db.collection("motoristas").doc(motorista.id);
+      const idSnap = await idRef.get();
 
       if (!placaDuplicada.empty) {
         mensagem.innerText = "❌ Já existe um motorista cadastrado com essa placa.";
         return;
       }
 
-      // Verifica se já existe documento com o mesmo ID
-      const idRef = db.collection("motoristas").doc(idGerado);
-      const idSnap = await idRef.get();
-
       if (idSnap.exists) {
         mensagem.innerText = "❌ Já existe um motorista com esse ID. Tente novamente.";
         return;
       }
 
-      const motorista = {
-        id: idGerado,
-        nome: document.getElementById("nome").value.trim(),
-        telefone: document.getElementById("telefone").value.trim(),
-        marca: document.getElementById("marca").value.trim(),
-        modelo: document.getElementById("modelo").value.trim(),
-        cor: document.getElementById("cor").value.trim(),
-        "Tipo de carro": document.getElementById("tipoCarro").value,
-        ano: document.getElementById("ano").value.trim(),
-        tipoPlaca: document.getElementById("tipoPlaca").value,
-        placa: placaFormatada,
-        ativo: true,
-        statusOperacional: "disponível"
-      };
-
-      // Salva com o ID como nome do documento
       await idRef.set(motorista);
+      localStorage.removeItem("motoristaTemp");
 
-      localStorage.removeItem("motoristas");
-
-      mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso!`;
+      mensagem.innerText = `✅ Motorista ${motorista.nome} salvo no Firebase com sucesso!`;
       atualizarContador();
       limparFormulario();
     } catch (error) {
