@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastro de Motorista</title>
 
-  <!-- Verificação de acesso -->
   <script>
     const usuario = localStorage.getItem("usuario");
     if (usuario !== "admin") {
@@ -104,8 +103,6 @@
   <main class="container">
     <h1>📝 Cadastro de Motorista</h1>
 
-    <button type="button" id="botaoFirebase">✅ Salvar no Firebase</button>
-
     <form id="formMotorista">
       <label for="nome">Nome completo:</label>
       <input type="text" id="nome" required />
@@ -146,14 +143,19 @@
       <label for="placa">Placa:</label>
       <input type="text" id="placa" maxlength="8" required />
 
+      <label for="pin">PIN de segurança (4 dígitos):</label>
+      <input type="password" id="pin" maxlength="4" pattern="\d{4}" required />
+
       <button type="submit">Cadastrar Motorista</button>
     </form>
+
+    <button type="button" id="botaoFirebase">✅ Salvar no Firebase</button>
 
     <div id="mensagemCadastro"></div>
     <div id="contadorMotoristas"></div>
   </main>
 
-  <!-- Firebase compatível com navegador -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
@@ -170,7 +172,6 @@
     const db = firebase.firestore();
   </script>
 
-  <!-- Script principal -->
   <script>
     const form = document.getElementById("formMotorista");
     const mensagem = document.getElementById("mensagemCadastro");
@@ -238,43 +239,16 @@
         ano: document.getElementById("ano").value.trim(),
         tipoPlaca: document.getElementById("tipoPlaca").value,
         placa: document.getElementById("placa").value.trim().toUpperCase(),
-        ativo: true
+        pin: document.getElementById("pin").value.trim(),
+        ativo: true,
+        statusOperacional: "disponivel"
       };
 
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-      lista.push(motorista);
-      localStorage.setItem("motoristas", JSON.stringify(lista));
+      localStorage.setItem("motoristas", JSON.stringify([motorista]));
 
-            mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
+      mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado localmente!`;
       atualizarContador();
       limparFormulario();
     });
 
-    document.getElementById("botaoFirebase").addEventListener("click", async () => {
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
-      if (lista.length === 0) {
-        alert("⚠️ Nenhum motorista encontrado no localStorage.");
-        return;
-      }
-
-      let sucesso = 0;
-      let falhas = 0;
-
-      for (const motorista of lista) {
-        try {
-          await db.collection("motoristas").add(motorista);
-          sucesso++;
-        } catch (error) {
-          console.error("Erro ao salvar no Firebase:", error);
-          falhas++;
-        }
-      }
-
-      alert(`✅ ${sucesso} motoristas salvos no Firebase.\n❌ ${falhas} falhas.`);
-    });
-
-    atualizarContador();
-  </script>
-</body>
-</html>
+    document.getElementBy
