@@ -2,32 +2,46 @@
   const form = document.getElementById("formMotorista");
   const mensagem = document.getElementById("mensagemCadastro");
   const contador = document.getElementById("contadorMotoristas");
-  const botaoSalvarFirebase = document.getElementById("salvarFirebase");
 
   const usuario = localStorage.getItem("usuario");
 
+  // Bloqueia alterações se o usuário for um motorista
   if (usuario === "motorista") {
+    // Desabilita todos os campos do formulário
     Array.from(form.elements).forEach(el => el.disabled = true);
+
+    // Oculta o botão de envio
     const botaoCadastrar = form.querySelector('button[type="submit"]');
     if (botaoCadastrar) botaoCadastrar.style.display = "none";
-    if (botaoSalvarFirebase) botaoSalvarFirebase.style.display = "none";
+
+    // Opcional: mensagem informativa
     mensagem.innerText = "🔒 Visualização apenas. Motoristas não podem alterar os dados.";
   }
 
   function capitalizarTexto(texto) {
-    return texto.toLowerCase().split(" ").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+    return texto
+      .toLowerCase()
+      .split(" ")
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
   }
 
   function formatarTelefone(valor) {
     valor = valor.replace(/\D/g, "");
-    if (valor.length === 10) return valor.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-    if (valor.length === 11) return valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    if (valor.length === 10) {
+      return valor.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    } else if (valor.length === 11) {
+      return valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    }
     return valor;
   }
 
   function formatarPlaca(valor) {
     valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return valor.length > 3 ? valor.slice(0, 3) + '-' + valor.slice(3) : valor;
+    if (valor.length > 3) {
+      return valor.slice(0, 3) + '-' + valor.slice(3);
+    }
+    return valor;
   }
 
   function limparFormulario() {
@@ -35,21 +49,30 @@
   }
 
   function atualizarContador() {
-    db.collection("motoristas").get().then(snapshot => {
-      contador.innerText = `Total de motoristas cadastrados: ${snapshot.size}`;
-    }).catch(() => {
-      contador.innerText = "Erro ao contar motoristas.";
-    });
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    contador.innerText = `Total de motoristas cadastrados: ${lista.length}`;
   }
 
   function gerarIdSequencial() {
-    return "M" + String(Date.now()).slice(-6);
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    const proximoNumero = lista.length + 1;
+    return String(proximoNumero).padStart(3, '0');
   }
 
-  ["nome", "marca", "modelo", "cor"].forEach(id => {
-    document.getElementById(id).addEventListener("blur", e => {
-      e.target.value = capitalizarTexto(e.target.value);
-    });
+  document.getElementById("nome").addEventListener("blur", e => {
+    e.target.value = capitalizarTexto(e.target.value);
+  });
+
+  document.getElementById("marca").addEventListener("blur", e => {
+    e.target.value = capitalizarTexto(e.target.value);
+  });
+
+  document.getElementById("modelo").addEventListener("blur", e => {
+    e.target.value = capitalizarTexto(e.target.value);
+  });
+
+  document.getElementById("cor").addEventListener("blur", e => {
+    e.target.value = capitalizarTexto(e.target.value);
   });
 
   document.getElementById("telefone").addEventListener("blur", e => {
@@ -60,15 +83,11 @@
     e.target.value = formatarPlaca(e.target.value);
   });
 
-  // Botão de cadastro (prepara motorista e salva no localStorage)
   form.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const placaFormatada = document.getElementById("placa").value.trim().toUpperCase();
-    const idGerado = gerarIdSequencial();
-
     const motorista = {
-      id: idGerado,
+      id: gerarIdSequencial(),
       nome: document.getElementById("nome").value.trim(),
       telefone: document.getElementById("telefone").value.trim(),
       marca: document.getElementById("marca").value.trim(),
@@ -77,54 +96,19 @@
       "Tipo de carro": document.getElementById("tipoCarro").value,
       ano: document.getElementById("ano").value.trim(),
       tipoPlaca: document.getElementById("tipoPlaca").value,
-      placa: placaFormatada,
-      ativo: true,
-      statusOperacional: "disponível"
+      placa: document.getElementById("placa").value.trim().toUpperCase(),
+      ativo: true
     };
 
-    localStorage.setItem("motoristaTemp", JSON.stringify(motorista));
-    mensagem.innerText = `📝 Motorista ${motorista.nome} preparado para salvar. Clique em "Salvar no Firebase".`;
-  });
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    lista.push(motorista);
+    localStorage.setItem("motoristas", JSON.stringify(lista));
 
-  // Botão "Salvar no Firebase"
-  botaoSalvarFirebase.addEventListener("click", async () => {
-    const motoristaSalvo = localStorage.getItem("motoristaTemp");
-    if (!motoristaSalvo) {
-      mensagem.innerText = "⚠️ Nenhum motorista preparado para salvar.";
-      return;
-    }
-
-    const motorista = JSON.parse(motoristaSalvo);
-
-    try {
-      const placaDuplicada = await db.collection("motoristas")
-        .where("placa", "==", motorista.placa)
-        .get();
-
-      const idRef = db.collection("motoristas").doc(motorista.id);
-      const idSnap = await idRef.get();
-
-      if (!placaDuplicada.empty) {
-        mensagem.innerText = "❌ Já existe um motorista cadastrado com essa placa.";
-        return;
-      }
-
-      if (idSnap.exists) {
-        mensagem.innerText = "❌ Já existe um motorista com esse ID. Tente novamente.";
-        return;
-      }
-
-      await idRef.set(motorista);
-      localStorage.removeItem("motoristaTemp");
-
-      mensagem.innerText = `✅ Motorista ${motorista.nome} salvo no Firebase com sucesso!`;
-      atualizarContador();
-      limparFormulario();
-    } catch (error) {
-      console.error("❌ Erro ao salvar no Firebase:", error);
-      mensagem.innerText = "❌ Erro ao salvar no banco de dados.";
-    }
+    mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
+    atualizarContador();
+    limparFormulario();
   });
 
   atualizarContador();
 </script>
+
