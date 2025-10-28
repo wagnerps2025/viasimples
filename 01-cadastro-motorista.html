@@ -5,14 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastro de Motorista</title>
 
-  <!-- Verificação de acesso -->
-  <script>
-    const usuario = localStorage.getItem("usuario");
-    if (usuario !== "admin") {
-      window.location.href = "login.html";
-    }
-  </script>
-
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -71,14 +63,22 @@
       margin-top: 30px;
       border-radius: 8px;
       border: none;
-      background-color: #FFD600;
       font-weight: bold;
       font-size: 16px;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #FFC400;
+      opacity: 0.9;
+    }
+
+    #botaoCadastrar {
+      background-color: #FFD600;
+    }
+
+    #botaoFirebase {
+      background-color: #4CAF50;
+      color: white;
     }
 
     #mensagemCadastro, #contadorMotoristas {
@@ -92,19 +92,19 @@
       font-size: 14px;
       color: #555;
     }
-
-    #botaoFirebase {
-      background-color: #4CAF50;
-      color: white;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
   <main class="container">
     <h1>📝 Cadastro de Motorista</h1>
 
-    <button type="button" id="botaoFirebase">✅ Salvar no Firebase</button>
+    <!-- Seletor para envio ao Firebase -->
+    <label for="seletorMotorista">Escolha o motorista para enviar ao Firebase:</label>
+    <select id="seletorMotorista">
+      <option value="">Selecione um ID</option>
+    </select>
+
+    <button type="button" id="botaoFirebase">✅ Salvar motorista selecionado no Firebase</button>
 
     <form id="formMotorista">
       <label for="nome">Nome completo:</label>
@@ -146,7 +146,7 @@
       <label for="placa">Placa:</label>
       <input type="text" id="placa" maxlength="8" required />
 
-      <button type="submit">Cadastrar Motorista</button>
+      <button type="submit" id="botaoCadastrar">Cadastrar Motorista</button>
     </form>
 
     <div id="mensagemCadastro"></div>
@@ -170,112 +170,136 @@
     const db = firebase.firestore();
   </script>
 
-  <!-- Script principal -->
   <script>
-    const form = document.getElementById("formMotorista");
-    const mensagem = document.getElementById("mensagemCadastro");
-    const contador = document.getElementById("contadorMotoristas");
+  const form = document.getElementById("formMotorista");
+  const mensagem = document.getElementById("mensagemCadastro");
+  const contador = document.getElementById("contadorMotoristas");
+  const seletor = document.getElementById("seletorMotorista");
+  const botaoFirebase = document.getElementById("botaoFirebase");
 
-    function capitalizarTexto(texto) {
-      return texto.toLowerCase().split(" ").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+  function capitalizarTexto(texto) {
+    return texto
+      .toLowerCase()
+      .split(" ")
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
+  }
+
+  function formatarTelefone(valor) {
+    valor = valor.replace(/\D/g, "");
+    if (valor.length === 10) {
+      return valor.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    } else if (valor.length === 11) {
+      return valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
     }
+    return valor;
+  }
 
-    function formatarTelefone(valor) {
-      valor = valor.replace(/\D/g, "");
-      if (valor.length === 11) {
-        return valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-      }
-      return valor;
+  function formatarPlaca(valor) {
+    valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (valor.length >= 7) {
+      return valor.slice(0, 3) + '-' + valor.slice(3, 7);
     }
+    return valor;
+  }
 
-    function formatarPlaca(valor) {
-      valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if (valor.length >= 7) {
-        return valor.slice(0, 3) + '-' + valor.slice(3, 7);
-      }
-      return valor;
-    }
+  function limparFormulario() {
+    form.reset();
+  }
 
-    function limparFormulario() {
-      form.reset();
-    }
+  function gerarIdSequencial() {
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    return String(lista.length + 1).padStart(3, '0');
+  }
 
-    function atualizarContador() {
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-      contador.innerText = `Total de motoristas cadastrados: ${lista.length}`;
-    }
+  function atualizarContador() {
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    contador.innerText = `Total de motoristas cadastrados: ${lista.length}`;
+  }
 
-    function gerarIdSequencial() {
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-      return String(lista.length + 1);
-    }
-
-    ["nome", "marca", "modelo", "cor"].forEach(id => {
-      document.getElementById(id).addEventListener("blur", e => {
-        e.target.value = capitalizarTexto(e.target.value);
-      });
+  function atualizarSeletor() {
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    seletor.innerHTML = '<option value="">Selecione um ID</option>';
+    lista.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m.id;
+      option.textContent = `${m.nome} (ID: ${m.id})`;
+      seletor.appendChild(option);
     });
+  }
 
-    document.getElementById("telefone").addEventListener("blur", e => {
-      e.target.value = formatarTelefone(e.target.value);
+  // Eventos de formatação automática
+  ["nome", "marca", "modelo", "cor"].forEach(id => {
+    document.getElementById(id).addEventListener("blur", e => {
+      e.target.value = capitalizarTexto(e.target.value);
     });
+  });
 
-    document.getElementById("placa").addEventListener("blur", e => {
-      e.target.value = formatarPlaca(e.target.value);
-    });
+  document.getElementById("telefone").addEventListener("blur", e => {
+    e.target.value = formatarTelefone(e.target.value);
+  });
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
+  document.getElementById("placa").addEventListener("blur", e => {
+    e.target.value = formatarPlaca(e.target.value);
+  });
 
-      const motorista = {
-        id: gerarIdSequencial(),
-        nome: document.getElementById("nome").value.trim(),
-        telefone: document.getElementById("telefone").value.trim(),
-        marca: document.getElementById("marca").value.trim(),
-        modelo: document.getElementById("modelo").value.trim(),
-        cor: document.getElementById("cor").value.trim(),
-        "Tipo de carro": document.getElementById("tipoCarro").value,
-        ano: document.getElementById("ano").value.trim(),
-        tipoPlaca: document.getElementById("tipoPlaca").value,
-        placa: document.getElementById("placa").value.trim().toUpperCase(),
-        ativo: true
-      };
+  // Cadastro de motorista
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
 
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-      lista.push(motorista);
-      localStorage.setItem("motoristas", JSON.stringify(lista));
+    const motorista = {
+      id: gerarIdSequencial(),
+      nome: document.getElementById("nome").value.trim(),
+      telefone: document.getElementById("telefone").value.trim(),
+      marca: document.getElementById("marca").value.trim(),
+      modelo: document.getElementById("modelo").value.trim(),
+      cor: document.getElementById("cor").value.trim(),
+      "Tipo de carro": document.getElementById("tipoCarro").value,
+      ano: document.getElementById("ano").value.trim(),
+      tipoPlaca: document.getElementById("tipoPlaca").value,
+      placa: document.getElementById("placa").value.trim().toUpperCase(),
+      ativo: true
+    };
 
-            mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
-      atualizarContador();
-      limparFormulario();
-    });
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    lista.push(motorista);
+    localStorage.setItem("motoristas", JSON.stringify(lista));
 
-    document.getElementById("botaoFirebase").addEventListener("click", async () => {
-      const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-
-      if (lista.length === 0) {
-        alert("⚠️ Nenhum motorista encontrado no localStorage.");
-        return;
-      }
-
-      let sucesso = 0;
-      let falhas = 0;
-
-      for (const motorista of lista) {
-        try {
-          await db.collection("motoristas").add(motorista);
-          sucesso++;
-        } catch (error) {
-          console.error("Erro ao salvar no Firebase:", error);
-          falhas++;
-        }
-      }
-
-      alert(`✅ ${sucesso} motoristas salvos no Firebase.\n❌ ${falhas} falhas.`);
-    });
-
+    mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
     atualizarContador();
-  </script>
+    atualizarSeletor();
+    limparFormulario();
+  });
+
+  // Envio ao Firebase do motorista selecionado
+  botaoFirebase.addEventListener("click", async () => {
+    const idSelecionado = seletor.value;
+    if (!idSelecionado) {
+      alert("⚠️ Selecione um motorista para enviar.");
+      return;
+    }
+
+    const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+    const motorista = lista.find(m => m.id === idSelecionado);
+
+    if (!motorista) {
+      alert("❌ Motorista não encontrado.");
+      return;
+    }
+
+    try {
+      await db.collection("motoristas").doc(motorista.id).set(motorista);
+      alert(`🚀 Motorista ${motorista.nome} enviado ao Firebase com sucesso!`);
+    } catch (error) {
+      console.error("Erro ao salvar no Firebase:", error);
+      alert("❌ Erro ao salvar no Firebase.");
+    }
+  });
+
+  // Inicialização
+  atualizarContador();
+  atualizarSeletor();
+</script>
+
 </body>
 </html>
-
