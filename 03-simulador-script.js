@@ -20,10 +20,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       🎯 Destino: ${corrida.destino}<br>
       💰 Valor: R$ ${corrida.valor.toFixed(2)}
     `;
-    listarMotoristasAtivos();
   }
 
   configuracoesCorrida = await obterConfiguracoesCorrida();
+  listarMotoristasAtivos();
 });
 
 window.initMap = function () {
@@ -145,78 +145,79 @@ window.calcularCorrida = async function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
+
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
 
-  let motoristas = [];
-
-  if (db) {
-    try {
-      const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
-      snapshot.forEach(doc => motoristas.push(doc.data()));
-    } catch (error) {
-      console.warn("⚠️ Erro ao buscar motoristas do Firebase:", error);
-    }
-  }
-
-  if (motoristas.length === 0) {
-    const local = JSON.parse(localStorage.getItem("motoristas") || "[]");
-    motoristas = local.filter(m => m.ativo);
-  }
-
-  if (motoristas.length === 0) {
-    lista.innerHTML = "<p>Nenhum motorista ativo disponível.</p>";
+  if (!db) {
+    lista.innerHTML = "<p>Firebase não está disponível.</p>";
     return;
   }
 
-  motoristas.forEach(motorista => {
-    const card = document.createElement("div");
-    card.className = "motorista-card ativo";
+  db.collection("motoristas")
+    .where("ativo", "==", true)
+    .onSnapshot(snapshot => {
+      lista.innerHTML = "";
+      let motoristas = [];
 
-    const emServico = motoristaEmServico === motorista.nome;
-    const statusTexto = emServico
-      ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
-      : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
+      snapshot.forEach(doc => {
+        const dados = doc.data();
+        motoristas.push({ ...dados, id: doc.id });
+      });
 
-    card.innerHTML = `
-      <div><strong>👤 ${motorista.nome}</strong></div>
-      <div>🏷️ Marca: ${motorista.marca}</div>
-      <div>🚗 Modelo: ${motorista.modelo}</div>
-      <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
-      <div>📅 Ano: ${motorista.ano}</div>
-      <div>🔠 Placa: ${motorista.placa}</div>
-      <div>🎨 Cor: ${motorista.cor}</div>
-      <div>📞 Telefone: ${motorista.telefone}</div>
-      ${statusTexto}
-      ${
-        !emServico
-          ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
-          : ""
+      if (motoristas.length === 0) {
+        lista.innerHTML = "<p>Nenhum motorista ativo disponível.</p>";
+        return;
       }
-    `;
 
-    lista.appendChild(card);
-  });
+      motoristas.forEach(motorista => {
+        const emServico = motorista.statusAtual === "em_servico";
+        const statusTexto = emServico
+          ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
+          : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
 
-  if (motoristaEmServico) {
-    const cancelarBtn = document.createElement("button");
-    cancelarBtn.textContent = "❌ Cancelar corrida";
-    cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+        const card = document.createElement("div");
+        card.className = "motorista-card ativo";
+        card.innerHTML = `
+          <div><strong>👤 ${motorista.nome}</strong></div>
+          <div>🏷️ Marca: ${motorista.marca}</div>
+          <div>🚗 Modelo: ${motorista.modelo}</div>
+          <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
+          <div>📅 Ano: ${motorista.ano}</div>
+          <div>🔠 Placa: ${motorista.placa}</div>
+          <div>🎨 Cor: ${motorista.cor}</div>
+          <div>📞 Telefone: ${motorista.telefone}</div>
+          ${statusTexto}
+          ${
+            !emServico
+              ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
+              : ""
+          }
+        `;
+        lista.appendChild(card);
+      });
 
-    const finalizarBtn = document.createElement("button");
-    finalizarBtn.textContent = "✅ Finalizar corrida";
-    finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
+      const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
+      if (corrida) {
+        const cancelarBtn = document.createElement("button");
+        cancelarBtn.textContent = "❌ Cancelar corrida";
+        cancelarBtn.style = "background-color: #FF5252; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
 
-    cancelarBtn.onclick = cancelarMotorista;
-    finalizarBtn.onclick = finalizarCorrida;
+        const finalizarBtn = document.createElement("button");
+        finalizarBtn.textContent = "✅ Finalizar corrida";
+        finalizarBtn.style = "background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border: none; border-radius: 8px; cursor: pointer; flex: 1; min-width: 140px;";
 
-    const grupoBotoes = document.createElement("div");
-    grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap;";
-    grupoBotoes.appendChild(cancelarBtn);
-    grupoBotoes.appendChild(finalizarBtn);
-    lista.appendChild(grupoBotoes);
-  }
+        cancelarBtn.onclick = cancelarMotorista;
+        finalizarBtn.onclick = finalizarCorrida;
+
+        const grupoBotoes = document.createElement("div");
+        grupoBotoes.style = "display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap;";
+        grupoBotoes.appendChild(cancelarBtn);
+        grupoBotoes.appendChild(finalizarBtn);
+        lista.appendChild(grupoBotoes);
+      }
+    });
 }
 
 window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
@@ -348,4 +349,3 @@ window.limparCampos = function () {
   duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
 };
-
