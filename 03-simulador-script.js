@@ -348,3 +348,4 @@ window.limparCampos = function () {
   duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
 };
+
