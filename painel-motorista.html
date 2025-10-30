@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel do Motorista</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    .status {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #444;
+      background-color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #ffcc00;
+      color: #000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e6b800;
+    }
+
+    #botaoToggle {
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚗 Painel do Motorista</h1>
+  <div class="status" id="statusAtivo">Status: carregando...</div>
+  <div class="status" id="statusServico">Situação: carregando...</div>
+  <button id="botaoToggle">🔁 Alternar Ligar/Desligar</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const nomeMotorista = localStorage.getItem("motoristaLogado");
+    const statusAtivo = document.getElementById("statusAtivo");
+    const statusServico = document.getElementById("statusServico");
+    const botaoToggle = document.getElementById("botaoToggle");
+
+    let docRef = null;
+
+    async function iniciarPainel() {
+      if (!nomeMotorista) {
+        alert("Motorista não identificado.");
+        return;
+      }
+
+      const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
+      if (snapshot.empty) {
+        alert("Motorista não encontrado no sistema.");
+        return;
+      }
+
+      docRef = snapshot.docs[0].ref;
+
+      docRef.onSnapshot(doc => {
+        const dados = doc.data();
+        const ativo = dados.ativo;
+        const status = dados.statusAtual;
+
+        statusAtivo.textContent = `Status: ${ativo ? "✅ Ativo" : "❌ Inativo"}`;
+        statusServico.textContent = `Situação: ${
+          !ativo ? "🔒 Bloqueado pelo sistema" :
+          status === "em_servico" ? "🚧 Em serviço" :
+          status === "aguardando" ? "🟢 Aguardando corrida" :
+          "🔴 Indisponível"
+        }`;
+
+        botaoToggle.style.display = ativo ? "inline-block" : "none";
+        botaoToggle.textContent = status === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+      });
+    }
+
+    botaoToggle.addEventListener("click", async () => {
+      if (!docRef) return;
+      const doc = await docRef.get();
+      const dados = doc.data();
+
+      if (!dados.ativo) {
+        alert("Você está inativo no sistema. Não é possível alternar o status.");
+        return;
+      }
+
+      const novoStatus = dados.statusAtual === "desligado" ? "aguardando" : "desligado";
+      await docRef.update({ statusAtual: novoStatus });
+    });
+
+    iniciarPainel();
+  </script>
+</body>
+</html>
