@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Simulador de Corrida</title>
+  <title>Login do Motorista</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
@@ -10,7 +10,7 @@
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       background-color: #f9f9f9;
       margin: 0;
-      padding: 30px;
+      padding: 40px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,32 +19,24 @@
     h1 {
       color: #333;
       font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    #formSimulador {
-      width: 100%;
-      max-width: 500px;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       margin-bottom: 30px;
     }
 
-    input, select {
+    input {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+      max-width: 400px;
+      padding: 14px;
+      font-size: 16px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      font-size: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     button {
-      padding: 12px 20px;
-      font-weight: bold;
+      padding: 14px 28px;
       font-size: 16px;
+      font-weight: bold;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -57,59 +49,12 @@
     button:hover {
       background-color: #e6c200;
     }
-
-    #resultadoCorrida {
-      font-size: 16px;
-      margin-bottom: 20px;
-      background-color: #fff;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 100%;
-    }
-
-    .motorista-card {
-      background-color: #fff;
-      padding: 16px;
-      margin: 10px 0;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 500px;
-    }
-
-    .motorista-card div {
-      margin-bottom: 6px;
-      font-size: 15px;
-    }
-
-    .motorista-card button {
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    #listaMotoristas {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
   </style>
 </head>
 <body>
-  <h1>🧭 Simulador de Corrida</h1>
-
-  <form id="formSimulador">
-    <input type="text" id="nomePassageiro" placeholder="Seu nome" required />
-    <input type="text" id="origem" placeholder="Endereço de origem" required />
-    <input type="text" id="destino" placeholder="Endereço de destino" required />
-    <button type="button" onclick="calcularCorrida()">Calcular Corrida</button>
-    <button type="button" id="botaoLimpar" onclick="limparCampos()" style="display:none">Limpar</button>
-  </form>
-
-  <div id="resultadoCorrida"></div>
-  <div id="listaMotoristas"></div>
+  <h1>🚗 Login do Motorista</h1>
+  <input type="text" id="nomeMotorista" placeholder="Digite seu nome completo" />
+  <button onclick="loginMotorista()">Entrar</button>
 
   <script>
     const firebaseConfig = {
@@ -124,92 +69,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let coordenadasOrigem = null;
-    let coordenadasDestino = null;
-    let valorCorrida = 0;
-    let distanciaTexto = "";
-    let duracaoTexto = "";
-    let motoristaEmServico = null;
-
-    async function calcularCorrida() {
-      const origem = document.getElementById("origem").value.trim();
-      const destino = document.getElementById("destino").value.trim();
-
-      if (!origem || !destino) {
-        alert("Preencha origem e destino.");
+    async function loginMotorista() {
+      const nome = document.getElementById("nomeMotorista").value.trim();
+      if (!nome) {
+        alert("Digite seu nome para continuar.");
         return;
       }
 
-      // Simulação de cálculo
-      distanciaTexto = "5 km";
-      duracaoTexto = "10 min";
-      valorCorrida = 18.50;
-
-      document.getElementById("resultadoCorrida").innerHTML = `
-        🛣️ Distância: ${distanciaTexto}<br>
-        ⏱️ Tempo estimado: ${duracaoTexto}<br>
-        💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}
-      `;
-
-      listarMotoristasAtivos();
-      document.getElementById("botaoLimpar").style.display = "inline-block";
-    }
-
-    async function listarMotoristasAtivos() {
-      const lista = document.getElementById("listaMotoristas");
-      lista.innerHTML = "";
-
-      const snapshot = await db.collection("motoristas").where("ativo", "==", true).get();
-      const motoristas = [];
-
-      snapshot.forEach(doc => {
-        const dados = doc.data();
-        if (dados.statusAtual !== "desligado") {
-          motoristas.push(dados);
+      try {
+        const snapshot = await db.collection("motoristas").where("nome", "==", nome).get();
+        if (snapshot.empty) {
+          alert("Motorista não encontrado. Verifique o nome digitado.");
+          return;
         }
-      });
 
-      if (motoristas.length === 0) {
-        lista.innerHTML = "<p>Nenhum motorista disponível no momento.</p>";
-        return;
+        localStorage.setItem("motoristaLogado", nome);
+        window.location.href = "painel-motorista.html";
+      } catch (error) {
+        console.error("Erro ao buscar motorista:", error);
+        alert("Erro ao tentar fazer login.");
       }
-
-      motoristas.forEach(motorista => {
-        const emServico = motorista.statusAtual === "em_servico";
-        const statusTexto = emServico
-          ? `<div style="color: red; font-weight: bold;">🚧 Em serviço</div>`
-          : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
-
-        const card = document.createElement("div");
-        card.className = "motorista-card";
-        card.innerHTML = `
-          <div><strong>👤 ${motorista.nome}</strong></div>
-          <div>🚗 ${motorista.modelo} - ${motorista.marca}</div>
-          <div>🔠 Placa: ${motorista.placa}</div>
-          <div>📞 ${motorista.telefone}</div>
-          ${statusTexto}
-          ${
-            !emServico
-              ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Chamar motorista</button>`
-              : ""
-          }
-        `;
-        lista.appendChild(card);
-      });
-    }
-
-    function enviarParaMotorista(telefone, nomeMotorista) {
-      alert(`Corrida solicitada para ${nomeMotorista}`);
-      motoristaEmServico = nomeMotorista;
-      listarMotoristasAtivos();
-    }
-
-    function limparCampos() {
-      document.getElementById("formSimulador").reset();
-      document.getElementById("resultadoCorrida").innerHTML = "";
-      document.getElementById("listaMotoristas").innerHTML = "";
-      document.getElementById("botaoLimpar").style.display = "none";
-      motoristaEmServico = null;
     }
   </script>
 </body>
