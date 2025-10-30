@@ -171,7 +171,10 @@ async function listarMotoristasAtivos() {
         return;
       }
 
-      motoristas.forEach(motorista => {
+      motoristas
+  .filter(m => m.statusAtual !== "desligado")
+  .forEach(motorista => {
+
         const emServico = motorista.statusAtual === "em_servico";
         const statusTexto = emServico
           ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
