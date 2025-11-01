@@ -167,4 +167,3 @@ function filtrarMotoristas() {
 
 // 🚀 Inicializa ao carregar a página
 window.onload = carregarMotoristas;
-

@@ -133,23 +133,34 @@
     const db = firebase.firestore();
     const painel = document.getElementById("painelMotoristas");
 
+    const usuario = localStorage.getItem("usuario");
+    const motoristaId = localStorage.getItem("motoristaId");
+
+    if (usuario !== "admin" && usuario !== "motorista") {
+      document.body.innerHTML = `
+        <main style="text-align:center; padding:60px; font-family:sans-serif;">
+          <h2>🔒 Acesso restrito</h2>
+          <p>Você precisa estar autenticado para visualizar esta página.</p>
+          <p>Redirecionando para login...</p>
+        </main>
+      `;
+      setTimeout(() => window.location.href = "00-login-admin.html", 2000);
+    }
+
     async function carregarPainel() {
       painel.innerHTML = "Carregando dados...";
-
-      const tipo = new URLSearchParams(window.location.search).get("tipo");
-      const motoristaId = localStorage.getItem("motoristaId");
 
       try {
         painel.innerHTML = "";
 
-        if (tipo === "motorista" && motoristaId) {
+        if (usuario === "motorista" && motoristaId) {
           const doc = await db.collection("motoristas").doc(motoristaId).get();
           if (!doc.exists) {
             painel.innerHTML = "<p>Motorista não encontrado.</p>";
             return;
           }
           renderizarMotorista(doc);
-        } else {
+        } else if (usuario === "admin") {
           const lista = await db.collection("motoristas").get();
           if (lista.empty) {
             painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
@@ -199,7 +210,7 @@
       container.appendChild(statusAtivo);
       container.appendChild(statusServico);
 
-      if (m.ativo) {
+      if (m.ativo && (usuario === "admin" || (usuario === "motorista" && motoristaId === id))) {
         const botao = document.createElement("button");
         botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
         botao.onclick = async () => {

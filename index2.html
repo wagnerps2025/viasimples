@@ -5,12 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ViaSimples - Início</title>
 
-  <!-- Estilos principais -->
   <link rel="stylesheet" href="style-viasimples.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="manifest" href="manifest.json" />
 
-  <!-- Estilos internos específicos da página -->
   <style>
     .menu {
       display: grid;
@@ -95,8 +93,8 @@
       <a href="01-cadastro-motorista.html">Cadastro de Motorista <span>📝</span></a>
       <a href="02-admin-painel.html">Painel de Motoristas <span>📝</span></a>
       <a href="gerenciar.html">Gerenciar Motoristas <span>📋</span></a>
-	  <a href="painel-motorista.html">Painel Motorista<span>📋</span></a>
-	  <a href="04-configuracoes.html">Configuracoes Valores <span>📋</span></a>
+      <a href="painel-motorista.html">Painel Motorista<span>📋</span></a>
+      <a href="04-configuracoes.html">Configurações Valores <span>📋</span></a>
     </nav>
   </main>
 
@@ -105,20 +103,17 @@
     <a href="01-cadastro-motorista.html"><span>👤</span>Motorista</a>
     <a href="02-admin-painel.html"><span>📊</span>Painel</a>
     <a href="00-login-admin.html"><span>🔑</span>Login</a>
-	<a href="04-configuracoes.html"><span>📊</span>Configuracoes</a>
+    <a href="04-configuracoes.html"><span>⚙️</span>Configurações</a>
   </nav>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- Inicialização do Firebase e lógica principal -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const splash = document.getElementById("splash");
       const main = document.querySelector("main.container");
 
-      // Inicializa Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
         authDomain: "viasimples-9d340.firebaseapp.com",
@@ -130,7 +125,6 @@
       firebase.initializeApp(firebaseConfig);
       window.db = firebase.firestore();
 
-      // Splash
       if (splash && main) {
         splash.style.opacity = 0;
         setTimeout(() => {
@@ -139,31 +133,33 @@
         }, 400);
       }
 
-      // Verificação de acesso
       const usuario = localStorage.getItem("usuario");
-      const permitido = ["admin", "motorista", "visitante"];
-      if (!permitido.includes(usuario)) {
+      const nomeAdmin = localStorage.getItem("nomeAdmin");
+
+      const isAdmin = usuario === "admin" && nomeAdmin === "Wagner Souza";
+
+      if (!usuario || (!["admin", "motorista", "visitante"].includes(usuario))) {
         window.location.replace("00-login-admin.html");
         return;
       }
 
-      // Bloqueio de links
-      document.querySelectorAll("a[href]").forEach(link => {
-        const href = link.getAttribute("href");
-        const acessoLivre = href.includes("03-simulador") || href.includes("00-login");
-        const acessoRestrito = href.includes("01-cadastro") || href.includes("02-admin") || href.includes("gerenciar");
+      if (!isAdmin) {
+        document.querySelectorAll("a[href]").forEach(link => {
+          const href = link.getAttribute("href");
+          const acessoLivre = href.includes("03-simulador") || href.includes("00-login");
+          const acessoRestrito = href.includes("01-cadastro") || href.includes("02-admin") || href.includes("gerenciar") || href.includes("04-configuracoes");
 
-        if (!usuario && acessoRestrito) {
-          link.addEventListener("click", function(e) {
-            e.preventDefault();
-            alert("🔒 Acesso restrito. Você será redirecionado para login.");
-            window.location.href = "00-login-admin.html";
-          });
-        }
-      });
+          if (acessoRestrito) {
+            link.addEventListener("click", function(e) {
+              e.preventDefault();
+              alert("🔒 Acesso restrito. Apenas administradores podem acessar esta área.");
+              window.location.href = "00-login-admin.html";
+            });
+          }
+        });
+      }
 
-      // Registro de acesso
-      const nome = localStorage.getItem("nomeVisitante") || "Usuário";
+      const nome = localStorage.getItem("nomeAdmin") || localStorage.getItem("nomeVisitante") || "Usuário";
       const perfil = localStorage.getItem("usuario");
 
       setTimeout(() => {
@@ -180,13 +176,6 @@
         }
       }, 1000);
 
-      // GitHub Pages reload
-      if (location.hostname.includes("github.io") && !localStorage.getItem("githubDesbloqueado")) {
-        localStorage.setItem("githubDesbloqueado", "true");
-        setTimeout(() => location.reload(), 1000);
-      }
-
-      // Service Worker
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("service-worker.js")
           .then(() => console.log("✅ Service Worker registrado"))
@@ -196,4 +185,3 @@
   </script>
 </body>
 </html>
-
