@@ -100,13 +100,13 @@
 
     <!-- Login com senha -->
     <form id="formLogin" autocomplete="off">
-      <label for="nomeAdmin">👤 Nome de usuário:</label>
-      <input type="text" id="nomeAdmin" required />
+      <label for="nomeUsuario">👤 Nome de usuário:</label>
+      <input type="text" id="nomeUsuario" required />
 
-      <label for="senhaAdmin">🔒 Senha:</label>
+      <label for="senhaUsuario">🔒 Senha:</label>
       <div class="senha-container">
-        <input type="password" id="senhaAdmin" maxlength="20" required />
-        <span class="toggle-olho" onclick="mostrarSenha('senhaAdmin')">👁️</span>
+        <input type="password" id="senhaUsuario" maxlength="20" required />
+        <span class="toggle-olho" onclick="mostrarSenha('senhaUsuario')">👁️</span>
       </div>
 
       <div class="botoes">
@@ -148,8 +148,8 @@
     });
 
     async function autenticarUsuario() {
-      const nome = document.getElementById("nomeAdmin").value.trim();
-      const senha = document.getElementById("senhaAdmin").value.trim();
+      const nome = document.getElementById("nomeUsuario").value.trim();
+      const senha = document.getElementById("senhaUsuario").value.trim();
       const mensagem = document.getElementById("mensagem");
 
       if (!nome || !senha) {
@@ -174,8 +174,13 @@
           .get();
 
         if (!snapshot.empty) {
+          const motorista = snapshot.docs[0].data();
+          const id = snapshot.docs[0].id;
+
           localStorage.setItem("usuario", "motorista");
-          localStorage.setItem("nomeMotorista", nome);
+          localStorage.setItem("motoristaID", id);
+          localStorage.setItem("nomeMotorista", motorista.nome);
+
           exibirMensagem("✅ Acesso liberado para motorista!", "green");
           setTimeout(() => window.location.href = "painel-motorista.html", 1000);
         } else {

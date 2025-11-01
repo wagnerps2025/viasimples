@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>Painel do Motorista</title>
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background-color: #f2f2f2;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f6f8;
       margin: 0;
       padding: 40px 20px;
       display: flex;
@@ -18,25 +21,59 @@
     }
 
     h1 {
-      color: #333;
-      font-size: 24px;
+      color: #222;
+      font-size: 28px;
       margin-bottom: 30px;
-    }
-
-    .status {
-      font-size: 18px;
-      margin-bottom: 12px;
-      color: #444;
-      background-color: #fff;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
       text-align: center;
     }
 
-    button {
+    .painel {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .motorista {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-left: 6px solid #ffcc00;
+      position: relative;
+    }
+
+    .motorista-id {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .motorista h2 {
+      font-size: 22px;
+      margin: 0 0 10px;
+      color: #333;
+      text-align: center;
+    }
+
+    .motorista p {
+      margin: 6px 0;
+      font-size: 18px;
+      color: #555;
+      text-align: center;
+    }
+
+    .motorista button {
+      margin-top: 14px;
       padding: 12px 24px;
       font-size: 16px;
       font-weight: bold;
@@ -45,40 +82,18 @@
       cursor: pointer;
       background-color: #ffcc00;
       color: #000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       transition: background-color 0.3s ease;
     }
 
-    button:hover {
+    .motorista button:hover {
       background-color: #e6b800;
-    }
-
-    #botaoToggle {
-      margin-top: 20px;
-      display: none;
-    }
-
-    #painelAdmin {
-      margin-top: 40px;
-      width: 100%;
-      max-width: 600px;
-    }
-
-    #painelAdmin h2 {
-      font-size: 20px;
-      margin-bottom: 10px;
-      color: #333;
     }
   </style>
 </head>
 <body>
-  <h1>🚗 Painel do Motorista</h1>
-  <div class="status" id="statusAtivo">Status: carregando...</div>
-  <div class="status" id="statusServico">Situação: carregando...</div>
-  <button id="botaoToggle">🔁 Alternar Ligar/Desligar</button>
-
-  <!-- Seção extra para administrador -->
-  <div id="painelAdmin"></div>
+  <h1>🚖 Painel do Motorista</h1>
+  <div class="painel" id="painelMotoristas">Carregando dados...</div>
 
   <script>
     const firebaseConfig = {
@@ -92,109 +107,148 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const painel = document.getElementById("painelMotoristas");
 
-    const nomeMotorista = localStorage.getItem("nomeMotorista");
     const tipoUsuario = localStorage.getItem("usuario");
-    const statusAtivo = document.getElementById("statusAtivo");
-    const statusServico = document.getElementById("statusServico");
-    const botaoToggle = document.getElementById("botaoToggle");
-    const painelAdmin = document.getElementById("painelAdmin");
+    const motoristaID = localStorage.getItem("motoristaID");
 
-    let docRef = null;
-
-    async function iniciarPainel() {
+    async function carregarPainel() {
       if (tipoUsuario === "admin") {
-        painelAdmin.innerHTML = "<h2>👥 Motoristas cadastrados</h2><p>Carregando lista...</p>";
+        // ADMINISTRADOR: vê todos os motoristas
         try {
           const lista = await db.collection("motoristas").get();
           if (lista.empty) {
-            painelAdmin.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
+            painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
             return;
           }
 
-          let html = "";
+          painel.innerHTML = "";
+
           lista.forEach(doc => {
             const m = doc.data();
-            html += `
-              <div class="status" style="text-align:left">
-                <strong>${m.nome}</strong><br/>
-                Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}<br/>
-                Situação: ${
-                  !m.ativo ? "🔒 Bloqueado" :
-                  m.statusAtual === "em_servico" ? "🚧 Em serviço" :
-                  m.statusAtual === "aguardando" ? "🟢 Aguardando corrida" :
-                  m.statusAtual === "desligado" ? "🔌 Desligado" :
-                  "🔴 Indisponível"
-                }
-              </div>
-            `;
-          });
+            const ref = doc.ref;
+            const id = doc.id;
 
-          painelAdmin.innerHTML = html;
+            const container = document.createElement("div");
+            container.className = "motorista";
+
+            const idLabel = document.createElement("div");
+            idLabel.className = "motorista-id";
+            idLabel.textContent = `ID: ${id}`;
+
+            const nome = document.createElement("h2");
+            nome.textContent = m.nome;
+
+            const statusAtivo = document.createElement("p");
+            statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
+
+            const statusServico = document.createElement("p");
+            let statusTexto = "🔴 Indisponível";
+            if (!m.ativo) {
+              statusTexto = "🔒 Bloqueado";
+            } else if (m.statusAtual === "em_servico") {
+              statusTexto = "🚧 Em serviço";
+            } else if (m.statusAtual === "aguardando") {
+              statusTexto = "🟢 Aguardando corrida";
+            } else if (m.statusAtual === "desligado") {
+              statusTexto = "🔴 Desligado";
+            }
+            statusServico.textContent = `Situação: ${statusTexto}`;
+
+            container.appendChild(idLabel);
+            container.appendChild(nome);
+            container.appendChild(statusAtivo);
+            container.appendChild(statusServico);
+
+            if (m.ativo) {
+              const botao = document.createElement("button");
+              botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+              botao.onclick = async () => {
+                const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
+                await ref.update({ statusAtual: novoStatus });
+                carregarPainel(); // Atualiza após alteração
+              };
+              container.appendChild(botao);
+            }
+
+            painel.appendChild(container);
+          });
         } catch (error) {
           console.error("Erro ao carregar motoristas:", error);
-          painelAdmin.innerHTML = "<p>Erro ao acessar os dados.</p>";
+          painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
         }
-        return;
-      }
-
-      // Acesso padrão do motorista
-      if (!nomeMotorista) {
-        alert("Motorista não identificado.");
-        return;
-      }
-
-      try {
-        const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
-        if (snapshot.empty) {
-          alert("Motorista não encontrado no sistema.");
+      } else if (tipoUsuario === "motorista") {
+        // MOTORISTA: vê apenas seus próprios dados
+        if (!motoristaID) {
+          painel.innerHTML = "<p>Motorista não identificado. Faça login novamente.</p>";
           return;
         }
 
-        docRef = snapshot.docs[0].ref;
+        try {
+          const docRef = db.collection("motoristas").doc(motoristaID);
+          const doc = await docRef.get();
 
-        docRef.onSnapshot(doc => {
-          const dados = doc.data();
-          if (!dados) {
-            alert("Dados do motorista não encontrados.");
+          if (!doc.exists) {
+            painel.innerHTML = "<p>Dados do motorista não encontrados.</p>";
             return;
           }
 
-          const ativo = dados.ativo;
-          const status = dados.statusAtual;
+          const m = doc.data();
 
-          statusAtivo.textContent = `Status: ${ativo ? "✅ Ativo" : "❌ Inativo"}`;
-          statusServico.textContent = `Situação: ${
-            !ativo ? "🔒 Bloqueado pelo sistema" :
-            status === "em_servico" ? "🚧 Em serviço" :
-            status === "aguardando" ? "🟢 Aguardando corrida" :
-            "🔴 Indisponível"
-          }`;
+          const container = document.createElement("div");
+          container.className = "motorista";
 
-          botaoToggle.style.display = ativo ? "inline-block" : "none";
-          botaoToggle.textContent = status === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
-        });
-      } catch (error) {
-        console.error("Erro ao carregar painel:", error);
-        alert("Erro ao acessar os dados do motorista.");
+          const idLabel = document.createElement("div");
+          idLabel.className = "motorista-id";
+          idLabel.textContent = `ID: ${motoristaID}`;
+
+          const nome = document.createElement("h2");
+          nome.textContent = m.nome;
+
+          const statusAtivo = document.createElement("p");
+          statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
+
+          const statusServico = document.createElement("p");
+          let statusTexto = "🔴 Indisponível";
+          if (!m.ativo) {
+            statusTexto = "🔒 Bloqueado";
+          } else if (m.statusAtual === "em_servico") {
+            statusTexto = "🚧 Em serviço";
+          } else if (m.statusAtual === "aguardando") {
+            statusTexto = "🟢 Aguardando corrida";
+          } else if (m.statusAtual === "desligado") {
+            statusTexto = "🔴 Desligado";
+          }
+          statusServico.textContent = `Situação: ${statusTexto}`;
+
+          container.appendChild(idLabel);
+          container.appendChild(nome);
+          container.appendChild(statusAtivo);
+          container.appendChild(statusServico);
+
+          if (m.ativo) {
+            const botao = document.createElement("button");
+            botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+            botao.onclick = async () => {
+              const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
+              await docRef.update({ statusAtual: novoStatus });
+                            carregarPainel(); // Atualiza após alteração
+            };
+            container.appendChild(botao);
+          }
+
+          painel.innerHTML = "";
+          painel.appendChild(container);
+        } catch (error) {
+          console.error("Erro ao carregar motorista:", error);
+          painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
+        }
+      } else {
+        painel.innerHTML = "<p>Tipo de usuário não reconhecido. Faça login novamente.</p>";
       }
     }
 
-    botaoToggle.addEventListener("click", async () => {
-      if (!docRef) return;
-      const doc = await docRef.get();
-      const dados = doc.data();
-
-      if (!dados.ativo) {
-        alert("Você está inativo no sistema. Não é possível alternar o status.");
-        return;
-      }
-
-      const novoStatus = dados.statusAtual === "desligado" ? "aguardando" : "desligado";
-      await docRef.update({ statusAtual: novoStatus });
-    });
-
-    iniciarPainel();
+    carregarPainel();
   </script>
 </body>
 </html>
