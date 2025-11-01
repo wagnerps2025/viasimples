@@ -213,15 +213,14 @@
         return;
       }
 
-        try {
-  // Acesso administrativo
-  if (nome === "wagner souza" && senha === "Master15012013") {
-    exibirMensagem("✅ Bem-vindo, administrador!", "green");
-    setTimeout(() => {
-      window.location.href = "index2.html?tipo=admin";
-    }, 1000);
-    return;
- 
+      try {
+        // Acesso administrativo
+        if (nome === "wagner souza" && senha === "Master15012013") {
+          exibirMensagem("✅ Bem-vindo, administrador!", "green");
+          setTimeout(() => {
+            window.location.href = "index2.html";
+          }, 1000);
+          return;
         }
 
         // Acesso de motorista
@@ -266,4 +265,3 @@
   </script>
 </body>
 </html>
-
