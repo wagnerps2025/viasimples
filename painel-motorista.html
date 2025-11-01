@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel do Motorista</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -109,96 +110,27 @@
     const db = firebase.firestore();
     const painel = document.getElementById("painelMotoristas");
 
-    const tipoUsuario = localStorage.getItem("usuario");
-    const motoristaID = localStorage.getItem("motoristaID");
-
     async function carregarPainel() {
-      if (tipoUsuario === "admin") {
-        try {
-          const lista = await db.collection("motoristas").get();
-          if (lista.empty) {
-            painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
-            return;
-          }
-
-          painel.innerHTML = "";
-
-          lista.forEach(doc => {
-            const m = doc.data();
-            const ref = doc.ref;
-            const id = doc.id;
-
-            const container = document.createElement("div");
-            container.className = "motorista";
-
-            const idLabel = document.createElement("div");
-            idLabel.className = "motorista-id";
-            idLabel.textContent = `ID: ${id}`;
-
-            const nome = document.createElement("h2");
-            nome.textContent = m.nome;
-
-            const statusAtivo = document.createElement("p");
-            statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
-
-            const statusServico = document.createElement("p");
-            let statusTexto = "🔴 Indisponível";
-            if (!m.ativo) {
-              statusTexto = "🔒 Bloqueado";
-            } else if (m.statusAtual === "em_servico") {
-              statusTexto = "🚧 Em serviço";
-            } else if (m.statusAtual === "aguardando") {
-              statusTexto = "🟢 Aguardando corrida";
-            } else if (m.statusAtual === "desligado") {
-              statusTexto = "🔴 Desligado";
-            }
-            statusServico.textContent = `Situação: ${statusTexto}`;
-
-            container.appendChild(idLabel);
-            container.appendChild(nome);
-            container.appendChild(statusAtivo);
-            container.appendChild(statusServico);
-
-            if (m.ativo) {
-              const botao = document.createElement("button");
-              botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
-              botao.onclick = async () => {
-                const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-                await ref.update({ statusAtual: novoStatus });
-                carregarPainel();
-              };
-              container.appendChild(botao);
-            }
-
-            painel.appendChild(container);
-          });
-        } catch (error) {
-          console.error("Erro ao carregar motoristas:", error);
-          painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
-        }
-      } else if (tipoUsuario === "motorista") {
-        if (!motoristaID) {
-          painel.innerHTML = "<p>Motorista não identificado. Faça login novamente.</p>";
+      try {
+        const lista = await db.collection("motoristas").get();
+        if (lista.empty) {
+          painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
           return;
         }
 
-        try {
-          const docRef = db.collection("motoristas").doc(motoristaID);
-          const doc = await docRef.get();
+        painel.innerHTML = "";
 
-          if (!doc.exists) {
-            painel.innerHTML = "<p>Dados do motorista não encontrados.</p>";
-            return;
-          }
-
+        lista.forEach(doc => {
           const m = doc.data();
+          const ref = doc.ref;
+          const id = doc.id;
 
           const container = document.createElement("div");
           container.className = "motorista";
 
           const idLabel = document.createElement("div");
           idLabel.className = "motorista-id";
-          idLabel.textContent = `ID: ${motoristaID}`;
+          idLabel.textContent = `ID: ${id}`;
 
           const nome = document.createElement("h2");
           nome.textContent = m.nome;
@@ -229,24 +161,21 @@
             botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
             botao.onclick = async () => {
               const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-              await docRef.update({ statusAtual: novoStatus });
+              await ref.update({ statusAtual: novoStatus });
               carregarPainel();
             };
             container.appendChild(botao);
           }
 
-          painel.innerHTML = "";
           painel.appendChild(container);
-        } catch (error) {
-          console.error("Erro ao carregar motorista:", error);
-          painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
-        }
-      } else {
-        painel.innerHTML = "<p>Tipo de usuário não reconhecido. Faça login novamente.</p>";
+        });
+      } catch (error) {
+        console.error("Erro ao carregar motoristas:", error);
+        painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
       }
     }
 
-        carregarPainel();
+    carregarPainel();
   </script>
 </body>
 </html>
