@@ -1,6 +1,8 @@
 const form = document.getElementById("formMotorista");
 const mensagem = document.getElementById("mensagemCadastro");
 const contador = document.getElementById("contadorMotoristas");
+const seletor = document.getElementById("seletorMotorista");
+const botaoFirebase = document.getElementById("botaoFirebase");
 const usuario = localStorage.getItem("usuario");
 
 // Bloqueia alterações se o usuário for um motorista
@@ -11,6 +13,7 @@ if (usuario === "motorista") {
   mensagem.innerText = "🔒 Visualização apenas. Motoristas não podem alterar os dados.";
 }
 
+// Capitalização automática
 function capitalizarTexto(texto) {
   return texto
     .toLowerCase()
@@ -19,6 +22,7 @@ function capitalizarTexto(texto) {
     .join(" ");
 }
 
+// Formatação de telefone
 function formatarTelefone(valor) {
   valor = valor.replace(/\D/g, "");
   if (valor.length === 10) {
@@ -29,6 +33,7 @@ function formatarTelefone(valor) {
   return valor;
 }
 
+// Formatação de placa
 function formatarPlaca(valor) {
   valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (valor.length > 3) {
@@ -37,33 +42,33 @@ function formatarPlaca(valor) {
   return valor;
 }
 
-function limparFormulario() {
-  form.reset();
+// Geração de ID único
+function gerarIdUnico() {
+  const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+  let novoId = 1;
+  const idsExistentes = lista.map(m => parseInt(m.id));
+  while (idsExistentes.includes(novoId)) {
+    novoId++;
+  }
+  return String(novoId).padStart(3, '0');
 }
 
+// Atualiza contador
 function atualizarContador() {
   const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
   contador.innerText = `Total de motoristas cadastrados: ${lista.length}`;
 }
 
-function gerarIdSequencial() {
-  const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
-  const proximoNumero = lista.length + 1;
-  return String(proximoNumero).padStart(3, '0');
+// Limpa formulário
+function limparFormulario() {
+  form.reset();
 }
 
-// Capitalização e formatação de campos
-document.getElementById("nome").addEventListener("blur", e => {
-  e.target.value = capitalizarTexto(e.target.value);
-});
-document.getElementById("marca").addEventListener("blur", e => {
-  e.target.value = capitalizarTexto(e.target.value);
-});
-document.getElementById("modelo").addEventListener("blur", e => {
-  e.target.value = capitalizarTexto(e.target.value);
-});
-document.getElementById("cor").addEventListener("blur", e => {
-  e.target.value = capitalizarTexto(e.target.value);
+// Eventos de formatação automática
+["nome", "marca", "modelo", "cor"].forEach(id => {
+  document.getElementById(id).addEventListener("blur", e => {
+    e.target.value = capitalizarTexto(e.target.value);
+  });
 });
 document.getElementById("telefone").addEventListener("blur", e => {
   e.target.value = formatarTelefone(e.target.value);
@@ -72,12 +77,12 @@ document.getElementById("placa").addEventListener("blur", e => {
   e.target.value = formatarPlaca(e.target.value);
 });
 
-// Cadastro de motorista no localStorage
+// Cadastro de motorista
 form.addEventListener("submit", function (e) {
   e.preventDefault();
 
   const motorista = {
-    id: gerarIdSequencial(),
+    id: gerarIdUnico(),
     nome: document.getElementById("nome").value.trim(),
     telefone: document.getElementById("telefone").value.trim(),
     marca: document.getElementById("marca").value.trim(),
@@ -87,6 +92,7 @@ form.addEventListener("submit", function (e) {
     ano: document.getElementById("ano").value.trim(),
     tipoPlaca: document.getElementById("tipoPlaca").value,
     placa: document.getElementById("placa").value.trim().toUpperCase(),
+    senha: document.getElementById("senha").value.trim(),
     ativo: true
   };
 
@@ -96,23 +102,27 @@ form.addEventListener("submit", function (e) {
 
   mensagem.innerText = `✅ Motorista ${motorista.nome} cadastrado com sucesso! (ID: ${motorista.id})`;
   atualizarContador();
+  atualizarSeletor();
   limparFormulario();
 });
 
-// Novo: Preenche seletor de motoristas para envio ao Firebase
-const seletor = document.getElementById("seletorMotorista");
-const motoristasSalvos = JSON.parse(localStorage.getItem("motoristas") || []);
-motoristasSalvos.forEach(m => {
-  const option = document.createElement("option");
-  option.value = m.id;
-  option.textContent = `${m.nome} (ID: ${m.id})`;
-  seletor.appendChild(option);
-});
+// Atualiza seletor de motoristas
+function atualizarSeletor() {
+  const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+  seletor.innerHTML = '<option value="">Selecione um ID</option>';
+  lista.forEach(m => {
+    const option = document.createElement("option");
+    option.value = m.id;
+    option.textContent = `${m.nome} (ID: ${m.id})`;
+    seletor.appendChild(option);
+  });
+}
 
-// Botão para enviar motorista selecionado ao Firebase
-document.getElementById("btnSalvarFirebase").addEventListener("click", function () {
+// Envia motorista ao Firebase
+botaoFirebase.addEventListener("click", function () {
   const idSelecionado = seletor.value;
-  const motoristaSelecionado = motoristasSalvos.find(m => m.id === idSelecionado);
+  const lista = JSON.parse(localStorage.getItem("motoristas") || "[]");
+  const motoristaSelecionado = lista.find(m => m.id === idSelecionado);
 
   if (!motoristaSelecionado) {
     alert("Motorista não encontrado.");
@@ -122,11 +132,12 @@ document.getElementById("btnSalvarFirebase").addEventListener("click", function 
   salvarNoFirebase(motoristaSelecionado);
 });
 
-// Função de envio ao Firebase
 function salvarNoFirebase(motorista) {
   firebase.firestore().collection("motoristas").doc(motorista.id).set(motorista)
     .then(() => alert(`🚀 Motorista ${motorista.nome} enviado ao Firebase com sucesso!`))
     .catch(err => console.error("Erro ao salvar no Firebase:", err));
 }
 
+// Inicialização
 atualizarContador();
+atualizarSeletor();

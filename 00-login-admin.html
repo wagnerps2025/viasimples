@@ -96,7 +96,7 @@
 <body>
   <main class="container">
     <h1 class="titulo-sistema">🚖 ViaSimples</h1>
-    <p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – <span>Mobilidade e Gestão de Corridas</span></p>
+    <p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – <span>Corridas Particulares</span></p>
 
     <!-- Login com senha -->
     <form id="formLogin" autocomplete="off">
@@ -105,7 +105,7 @@
 
       <label for="senhaAdmin">🔒 Senha:</label>
       <div class="senha-container">
-        <input type="password" id="senhaAdmin" required />
+        <input type="password" id="senhaAdmin" maxlength="20" required />
         <span class="toggle-olho" onclick="mostrarSenha('senhaAdmin')">👁️</span>
       </div>
 
@@ -126,14 +126,28 @@
     <div id="mensagem" role="alert" aria-live="polite"></div>
   </main>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-    // Login com senha
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
+      authDomain: "viasimples-9d340.firebaseapp.com",
+      projectId: "viasimples-9d340",
+      storageBucket: "viasimples-9d340.appspot.com",
+      messagingSenderId: "372389283187",
+      appId: "1:372389283187:web:139f81f5224bb0958e7106"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     document.getElementById("formLogin").addEventListener("submit", function(event) {
       event.preventDefault();
       autenticarUsuario();
     });
 
-    function autenticarUsuario() {
+    async function autenticarUsuario() {
       const nome = document.getElementById("nomeAdmin").value.trim();
       const senha = document.getElementById("senhaAdmin").value.trim();
       const mensagem = document.getElementById("mensagem");
@@ -143,24 +157,36 @@
         return;
       }
 
+      // Acesso fixo do administrador
       if (nome === "Wagner Souza" && senha === "Master15012013") {
         localStorage.setItem("usuario", "admin");
+        localStorage.setItem("nomeAdmin", nome);
         exibirMensagem("✅ Bem-vindo, administrador!", "green");
-        setTimeout(() => window.location.href = "index.html", 1000);
+        setTimeout(() => window.location.href = "index2.html", 1000);
         return;
       }
 
-      if (nome === "Motorista" && senha === "ViaSimples2025") {
-        localStorage.setItem("usuario", "motorista");
-        exibirMensagem("✅ Acesso liberado para motorista!", "green");
-        setTimeout(() => window.location.href = "02-admin-painel.html", 1000);
-        return;
-      }
+      // Verificação de motorista real no Firebase
+      try {
+        const snapshot = await db.collection("motoristas")
+          .where("nome", "==", nome)
+          .where("senha", "==", senha)
+          .get();
 
-      exibirMensagem("❌ Nome ou senha incorretos.", "red");
+        if (!snapshot.empty) {
+          localStorage.setItem("usuario", "motorista");
+          localStorage.setItem("nomeMotorista", nome);
+          exibirMensagem("✅ Acesso liberado para motorista!", "green");
+          setTimeout(() => window.location.href = "painel-motorista.html", 1000);
+        } else {
+          exibirMensagem("❌ Nome ou senha incorretos.", "red");
+        }
+      } catch (error) {
+        console.error("Erro ao validar login:", error);
+        exibirMensagem("❌ Erro ao conectar com o servidor.", "red");
+      }
     }
 
-    // Acesso direto ao simulador
     document.getElementById("formVisitante").addEventListener("submit", function(event) {
       event.preventDefault();
       localStorage.setItem("usuario", "visitante");
@@ -182,4 +208,3 @@
   </script>
 </body>
 </html>
-

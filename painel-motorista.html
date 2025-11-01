@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Painel do Motorista</title>
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
@@ -56,6 +57,18 @@
       margin-top: 20px;
       display: none;
     }
+
+    #painelAdmin {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    #painelAdmin h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -63,6 +76,9 @@
   <div class="status" id="statusAtivo">Status: carregando...</div>
   <div class="status" id="statusServico">Situação: carregando...</div>
   <button id="botaoToggle">🔁 Alternar Ligar/Desligar</button>
+
+  <!-- Seção extra para administrador -->
+  <div id="painelAdmin"></div>
 
   <script>
     const firebaseConfig = {
@@ -77,43 +93,91 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const nomeMotorista = localStorage.getItem("motoristaLogado");
+    const nomeMotorista = localStorage.getItem("nomeMotorista");
+    const tipoUsuario = localStorage.getItem("usuario");
     const statusAtivo = document.getElementById("statusAtivo");
     const statusServico = document.getElementById("statusServico");
     const botaoToggle = document.getElementById("botaoToggle");
+    const painelAdmin = document.getElementById("painelAdmin");
 
     let docRef = null;
 
     async function iniciarPainel() {
+      if (tipoUsuario === "admin") {
+        painelAdmin.innerHTML = "<h2>👥 Motoristas cadastrados</h2><p>Carregando lista...</p>";
+        try {
+          const lista = await db.collection("motoristas").get();
+          if (lista.empty) {
+            painelAdmin.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
+            return;
+          }
+
+          let html = "";
+          lista.forEach(doc => {
+            const m = doc.data();
+            html += `
+              <div class="status" style="text-align:left">
+                <strong>${m.nome}</strong><br/>
+                Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}<br/>
+                Situação: ${
+                  !m.ativo ? "🔒 Bloqueado" :
+                  m.statusAtual === "em_servico" ? "🚧 Em serviço" :
+                  m.statusAtual === "aguardando" ? "🟢 Aguardando corrida" :
+                  m.statusAtual === "desligado" ? "🔌 Desligado" :
+                  "🔴 Indisponível"
+                }
+              </div>
+            `;
+          });
+
+          painelAdmin.innerHTML = html;
+        } catch (error) {
+          console.error("Erro ao carregar motoristas:", error);
+          painelAdmin.innerHTML = "<p>Erro ao acessar os dados.</p>";
+        }
+        return;
+      }
+
+      // Acesso padrão do motorista
       if (!nomeMotorista) {
         alert("Motorista não identificado.");
         return;
       }
 
-      const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
-      if (snapshot.empty) {
-        alert("Motorista não encontrado no sistema.");
-        return;
+      try {
+        const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
+        if (snapshot.empty) {
+          alert("Motorista não encontrado no sistema.");
+          return;
+        }
+
+        docRef = snapshot.docs[0].ref;
+
+        docRef.onSnapshot(doc => {
+          const dados = doc.data();
+          if (!dados) {
+            alert("Dados do motorista não encontrados.");
+            return;
+          }
+
+          const ativo = dados.ativo;
+          const status = dados.statusAtual;
+
+          statusAtivo.textContent = `Status: ${ativo ? "✅ Ativo" : "❌ Inativo"}`;
+          statusServico.textContent = `Situação: ${
+            !ativo ? "🔒 Bloqueado pelo sistema" :
+            status === "em_servico" ? "🚧 Em serviço" :
+            status === "aguardando" ? "🟢 Aguardando corrida" :
+            "🔴 Indisponível"
+          }`;
+
+          botaoToggle.style.display = ativo ? "inline-block" : "none";
+          botaoToggle.textContent = status === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+        });
+      } catch (error) {
+        console.error("Erro ao carregar painel:", error);
+        alert("Erro ao acessar os dados do motorista.");
       }
-
-      docRef = snapshot.docs[0].ref;
-
-      docRef.onSnapshot(doc => {
-        const dados = doc.data();
-        const ativo = dados.ativo;
-        const status = dados.statusAtual;
-
-        statusAtivo.textContent = `Status: ${ativo ? "✅ Ativo" : "❌ Inativo"}`;
-        statusServico.textContent = `Situação: ${
-          !ativo ? "🔒 Bloqueado pelo sistema" :
-          status === "em_servico" ? "🚧 Em serviço" :
-          status === "aguardando" ? "🟢 Aguardando corrida" :
-          "🔴 Indisponível"
-        }`;
-
-        botaoToggle.style.display = ativo ? "inline-block" : "none";
-        botaoToggle.textContent = status === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
-      });
     }
 
     botaoToggle.addEventListener("click", async () => {
