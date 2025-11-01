@@ -1,6 +1,13 @@
 // app.js
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+// Corrige __dirname para ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -13,8 +20,8 @@ const firebaseConfig = {
 };
 
 // Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 
 // Função para simular corrida
 async function simularCorrida(distanciaKm) {
@@ -37,3 +44,26 @@ async function simularCorrida(distanciaKm) {
 
 // Executa a simulação com 12 km
 simularCorrida(12);
+
+// Servidor Express
+const app = express();
+const PORT = 8080;
+
+// 🔒 Desativa cache para garantir que arquivos atualizados sejam servidos
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+// Servir arquivos estáticos da pasta atual
+app.use(express.static(__dirname));
+
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Aplicativo ViaSimples rodando em http://localhost:${PORT}`);
+});
