@@ -176,7 +176,7 @@
     });
 
     async function autenticarUsuario() {
-      const nome = document.getElementById("nomeUsuario").value.trim().toLowerCase();
+      const nome = document.getElementById("nomeUsuario").value.trim();
       const senha = document.getElementById("senhaUsuario").value.trim();
 
       if (!nome || !senha) {
@@ -185,7 +185,7 @@
       }
 
       try {
-        if (nome === "wagner souza" && senha === "Master15012013") {
+        if (nome === "Wagner Souza" && senha === "Master15012013") {
           exibirMensagem("✅ Bem-vindo, administrador!", "green");
           setTimeout(() => {
             window.location.href = "painel-motorista.html?tipo=admin";
@@ -198,10 +198,7 @@
 
         lista.forEach(doc => {
           const dados = doc.data();
-          const nomeDb = dados.nome ? dados.nome.trim().toLowerCase() : "";
-          const senhaDb = dados.senha ? dados.senha.toString().trim() : "";
-
-          if (nomeDb === nome && senhaDb === senha) {
+          if (dados.nome === nome && dados.senha === senha) {
             encontrado = true;
             const id = doc.id;
             exibirMensagem("✅ Acesso liberado para motorista!", "green");
