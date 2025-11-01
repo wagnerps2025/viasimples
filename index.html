@@ -4,54 +4,74 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ViaSimples - Acesso ao Sistema</title>
-
-  <link rel="stylesheet" href="style-viasimples.css" />
-  <link rel="manifest" href="manifest.json" />
-
   <style>
+    :root {
+      --cor-principal: #FFD600;
+      --cor-hover: #FFC400;
+      --cor-fundo: #f5f5f5;
+      --cor-texto: #333;
+      --cor-secundaria: #666;
+      --fonte: 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
+      font-family: var(--fonte);
+      background-color: var(--cor-fundo);
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background-color: #f5f5f5;
-      margin: 0;
+      padding: 16px;
     }
 
     .container {
       background-color: #fff;
-      padding: 30px;
+      padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       width: 100%;
-      text-align: center;
+      max-width: 400px;
     }
 
     h1 {
-      margin-bottom: 10px;
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--cor-texto);
     }
 
     .boas-vindas {
-      font-size: 1em;
-      color: #555;
-      margin-bottom: 25px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--cor-secundaria);
+      margin-bottom: 24px;
+    }
+
+    form {
+      margin-bottom: 20px;
     }
 
     label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
       display: block;
-      text-align: left;
-      margin-bottom: 5px;
-      font-weight: bold;
+      color: var(--cor-texto);
     }
 
     input {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 6px;
+      padding: 12px;
+      font-size: 15px;
       border: 1px solid #ccc;
-      font-size: 1em;
+      border-radius: 8px;
+      margin-bottom: 16px;
     }
 
     .senha-container {
@@ -60,56 +80,83 @@
 
     .toggle-olho {
       position: absolute;
-      right: 10px;
+      right: 12px;
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      font-size: 1.2em;
-      user-select: none;
+      font-size: 18px;
+      color: var(--cor-secundaria);
     }
 
     .botoes button {
       width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      background-color: #FFD600;
+      padding: 14px;
+      font-size: 16px;
+      background-color: var(--cor-principal);
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 8px;
       font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
     .botoes button:hover {
-      background-color: #FFC400;
-    }
-
-    #mensagem {
-      margin-top: 15px;
-      font-weight: bold;
+      background-color: var(--cor-hover);
     }
 
     .separador {
-      margin: 30px 0 10px;
-      font-weight: bold;
-      color: #999;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 13px;
+      color: var(--cor-secundaria);
+    }
+
+    #mensagem {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .boas-vindas {
+        font-size: 13px;
+      }
+
+      input {
+        font-size: 14px;
+      }
+
+      .botoes button {
+        font-size: 15px;
+        padding: 12px;
+      }
     }
   </style>
 </head>
-
 <body>
   <main class="container">
-    <h1 class="titulo-sistema">🚖 ViaSimples</h1>
-    <p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – <span>Seu Motorista Particular</span></p>
+    <h1>🚖 ViaSimples</h1>
+    <p class="boas-vindas">Bem-vindo ao <strong>ViaSimples</strong> – Corridas Particulares</p>
 
-    <!-- Login com senha -->
     <form id="formLogin" autocomplete="off">
-      <label for="nomeAdmin">👤 Nome de usuário:</label>
-      <input type="text" id="nomeAdmin" aria-label="Nome de usuário" required />
+      <label for="nomeUsuario">👤 Nome de usuário:</label>
+      <input type="text" id="nomeUsuario" required />
 
-      <label for="senhaAdmin">🔒 Senha:</label>
+      <label for="senhaUsuario">🔒 Senha:</label>
       <div class="senha-container">
-        <input type="password" id="senhaAdmin" aria-label="Senha" required />
-        <span class="toggle-olho" onclick="mostrarSenha('senhaAdmin')">👁️</span>
+        <input type="password" id="senhaUsuario" maxlength="20" required />
+        <span class="toggle-olho" onclick="mostrarSenha('senhaUsuario')">👁️</span>
       </div>
 
       <div class="botoes">
@@ -119,7 +166,6 @@
 
     <div class="separador">ou</div>
 
-    <!-- Acesso direto ao simulador sem digitar -->
     <form id="formVisitante">
       <div class="botoes">
         <button type="submit">🚗 Entrar no Simulador de Corrida</button>
@@ -129,9 +175,11 @@
     <div id="mensagem" role="alert" aria-live="polite"></div>
   </main>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Script principal -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
@@ -144,14 +192,64 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-  </script>
 
-  <!-- Funções de login -->
-  <script>
-    function exibirMensagem(texto, cor) {
-      const msg = document.getElementById("mensagem");
-      msg.textContent = texto;
-      msg.style.color = cor;
+    document.getElementById("formLogin").addEventListener("submit", function(event) {
+      event.preventDefault();
+      autenticarUsuario();
+    });
+
+    document.getElementById("formVisitante").addEventListener("submit", function(event) {
+      event.preventDefault();
+      exibirMensagem("✅ Acesso liberado ao simulador!", "green");
+      setTimeout(() => window.location.href = "03-simulador.html", 1000);
+    });
+
+    async function autenticarUsuario() {
+      const nome = document.getElementById("nomeUsuario").value.trim().toLowerCase();
+      const senha = document.getElementById("senhaUsuario").value.trim();
+
+      if (!nome || !senha) {
+        exibirMensagem("Preencha nome de usuário e senha.", "red");
+        return;
+      }
+
+      try {
+        // Acesso administrativo
+        if (nome === "wagner souza" && senha === "Master15012013") {
+          exibirMensagem("✅ Bem-vindo, administrador!", "green");
+          setTimeout(() => {
+            window.location.href = "index2.html?tipo=admin";
+          }, 1000);
+          return;
+        }
+
+        // Acesso de motorista
+        const lista = await db.collection("motoristas").get();
+        let encontrado = false;
+
+        lista.forEach(doc => {
+          const dados = doc.data();
+          const nomeDb = dados.nome ? dados.nome.trim().toLowerCase() : "";
+          const senhaDb = dados.senha ? dados.senha.toString().trim() : "";
+
+          if (nomeDb === nome && senhaDb === senha) {
+            encontrado = true;
+            const id = doc.id;
+            localStorage.setItem("motoristaId", id);
+            exibirMensagem("✅ Acesso liberado para motorista!", "green");
+            setTimeout(() => {
+              window.location.href = `painel-motorista.html?tipo=motorista&id=${id}`;
+            }, 1000);
+          }
+        });
+
+        if (!encontrado) {
+          exibirMensagem("❌ Nome ou senha incorretos.", "red");
+        }
+      } catch (error) {
+        console.error("Erro ao validar login:", error);
+        exibirMensagem("❌ Erro ao conectar com o servidor.", "red");
+      }
     }
 
     function mostrarSenha(idCampo) {
@@ -159,78 +257,10 @@
       campo.type = campo.type === "password" ? "text" : "password";
     }
 
-    function autenticarUsuario() {
-      const nome = document.getElementById("nomeAdmin").value.trim();
-      const senha = document.getElementById("senhaAdmin").value.trim();
-
-      if (!nome || !senha) {
-        exibirMensagem("Preencha nome de usuário e senha.", "red");
-        return;
-      }
-
-      if (nome === "Wagner Souza" && senha === "Master15012013") {
-        localStorage.setItem("usuario", "admin");
-        exibirMensagem("✅ Bem-vindo, administrador!", "green");
-        setTimeout(() => window.location.href = "index2.html", 1000);
-        return;
-      }
-
-      if (nome === "Motorista" && senha === "ViaSimples2025") {
-        localStorage.setItem("usuario", "motorista");
-        exibirMensagem("✅ Acesso liberado para motorista!", "green");
-        setTimeout(() => window.location.href = "02-admin-painel.html", 1000);
-        return;
-      }
-
-      exibirMensagem("❌ Nome ou senha incorretos.", "red");
-    }
-
-    function acessoVisitante() {
-      localStorage.setItem("usuario", "visitante");
-      localStorage.setItem("nomeVisitante", "Visitante");
-      exibirMensagem("✅ Acesso liberado ao simulador!", "green");
-      setTimeout(() => window.location.href = "03-simulador.html", 1000);
-    }
-
-    document.getElementById("formLogin").addEventListener("submit", e => {
-      e.preventDefault();
-      autenticarUsuario();
-    });
-
-    document.getElementById("formVisitante").addEventListener("submit", e => {
-      e.preventDefault();
-      acessoVisitante();
-    });
-  </script>
-
-  <!-- Service Worker + GitHub Pages -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("✅ Service Worker registrado"))
-        .catch(err => console.error("❌ Erro ao registrar Service Worker", err));
-    }
-
-    if (location.hostname.includes("github.io")) {
-      console.log("🔄 Ambiente GitHub Pages detectado");
-
-      const scripts = [
-        "firebase-app-compat.js",
-        "firebase-firestore-compat.js",
-        "03-simulador-script.js"
-      ];
-
-      scripts.forEach(src => {
-        const found = [...document.scripts].some(s => s.src.includes(src));
-        if (!found) {
-          console.warn(`⚠️ Script não carregado: ${src}`);
-        }
-      });
-
-      if (!localStorage.getItem("githubDesbloqueado")) {
-        localStorage.setItem("githubDesbloqueado", "true");
-        location.reload(true);
-      }
+    function exibirMensagem(texto, cor) {
+      const msg = document.getElementById("mensagem");
+      msg.textContent = texto;
+      msg.style.color = cor;
     }
   </script>
 </body>

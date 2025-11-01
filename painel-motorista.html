@@ -7,24 +7,34 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
+    :root {
+      --cor-principal: #FFD600;
+      --cor-hover: #FFC400;
+      --cor-fundo: #f4f6f8;
+      --cor-texto: #333;
+      --cor-secundaria: #666;
+      --fonte: 'Segoe UI', 'Roboto', sans-serif;
+    }
+
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f8;
-      margin: 0;
-      padding: 40px 20px;
+      font-family: var(--fonte);
+      background-color: var(--cor-fundo);
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
     h1 {
-      color: #222;
       font-size: 24px;
-      margin-bottom: 25px;
+      color: var(--cor-texto);
+      margin-bottom: 20px;
       text-align: center;
     }
 
@@ -33,62 +43,75 @@
       max-width: 800px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 18px;
+      gap: 16px;
     }
 
     .motorista {
       background-color: #fff;
-      padding: 18px;
+      padding: 16px;
       border-radius: 10px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border-left: 5px solid #ffcc00;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border-left: 5px solid var(--cor-principal);
       position: relative;
     }
 
     .motorista-id {
       position: absolute;
-      top: 18px;
-      left: 18px;
-      font-size: 14px;
+      top: 16px;
+      left: 16px;
+      font-size: 13px;
+      color: var(--cor-secundaria);
       font-weight: bold;
-      color: #555;
     }
 
     .motorista h2 {
       font-size: 20px;
-      margin: 0 0 8px;
-      color: #333;
+      margin-bottom: 8px;
+      color: var(--cor-texto);
       text-align: center;
     }
 
     .motorista p {
-      margin: 5px 0;
       font-size: 15px;
-      color: #555;
+      color: var(--cor-secundaria);
+      margin: 4px 0;
       text-align: center;
     }
 
     .motorista button {
       margin-top: 12px;
-      padding: 10px 20px;
+      padding: 10px;
       font-size: 14px;
       font-weight: bold;
       border: none;
       border-radius: 6px;
-      cursor: pointer;
-      background-color: #ffcc00;
+      background-color: var(--cor-principal);
       color: #000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
       transition: background-color 0.3s ease;
     }
 
     .motorista button:hover {
-      background-color: #e6b800;
+      background-color: var(--cor-hover);
+    }
+
+    @media (max-width: 480px) {
+      .motorista {
+        padding: 14px;
+      }
+
+      .motorista h2 {
+        font-size: 18px;
+      }
+
+      .motorista p {
+        font-size: 14px;
+      }
+
+      .motorista button {
+        font-size: 13px;
+        padding: 8px;
+      }
     }
   </style>
 </head>
@@ -111,68 +134,83 @@
     const painel = document.getElementById("painelMotoristas");
 
     async function carregarPainel() {
-      try {
-        const lista = await db.collection("motoristas").get();
-        if (lista.empty) {
-          painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
-          return;
-        }
+      painel.innerHTML = "Carregando dados...";
 
+      const tipo = new URLSearchParams(window.location.search).get("tipo");
+      const motoristaId = localStorage.getItem("motoristaId");
+
+      try {
         painel.innerHTML = "";
 
-        lista.forEach(doc => {
-          const m = doc.data();
-          const ref = doc.ref;
-          const id = doc.id;
-
-          const container = document.createElement("div");
-          container.className = "motorista";
-
-          const idLabel = document.createElement("div");
-          idLabel.className = "motorista-id";
-          idLabel.textContent = `ID: ${id}`;
-
-          const nome = document.createElement("h2");
-          nome.textContent = m.nome;
-
-          const statusAtivo = document.createElement("p");
-          statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
-
-          const statusServico = document.createElement("p");
-          let statusTexto = "🔴 Indisponível";
-          if (!m.ativo) {
-            statusTexto = "🔒 Bloqueado";
-          } else if (m.statusAtual === "em_servico") {
-            statusTexto = "🚧 Em serviço";
-          } else if (m.statusAtual === "aguardando") {
-            statusTexto = "🟢 Aguardando corrida";
-          } else if (m.statusAtual === "desligado") {
-            statusTexto = "🔴 Desligado";
+        if (tipo === "motorista" && motoristaId) {
+          const doc = await db.collection("motoristas").doc(motoristaId).get();
+          if (!doc.exists) {
+            painel.innerHTML = "<p>Motorista não encontrado.</p>";
+            return;
           }
-          statusServico.textContent = `Situação: ${statusTexto}`;
-
-          container.appendChild(idLabel);
-          container.appendChild(nome);
-          container.appendChild(statusAtivo);
-          container.appendChild(statusServico);
-
-          if (m.ativo) {
-            const botao = document.createElement("button");
-            botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
-            botao.onclick = async () => {
-              const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-              await ref.update({ statusAtual: novoStatus });
-              carregarPainel();
-            };
-            container.appendChild(botao);
+          renderizarMotorista(doc);
+        } else {
+          const lista = await db.collection("motoristas").get();
+          if (lista.empty) {
+            painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
+            return;
           }
-
-          painel.appendChild(container);
-        });
+          lista.forEach(doc => renderizarMotorista(doc));
+        }
       } catch (error) {
         console.error("Erro ao carregar motoristas:", error);
         painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
       }
+    }
+
+    function renderizarMotorista(doc) {
+      const m = doc.data();
+      const ref = doc.ref;
+      const id = doc.id;
+
+      const container = document.createElement("div");
+      container.className = "motorista";
+
+      const idLabel = document.createElement("div");
+      idLabel.className = "motorista-id";
+      idLabel.textContent = `ID: ${id}`;
+
+      const nome = document.createElement("h2");
+      nome.textContent = m.nome;
+
+      const statusAtivo = document.createElement("p");
+      statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
+
+      const statusServico = document.createElement("p");
+      let statusTexto = "🔴 Indisponível";
+      if (!m.ativo) {
+        statusTexto = "🔒 Bloqueado";
+      } else if (m.statusAtual === "em_servico") {
+        statusTexto = "🚧 Em serviço";
+      } else if (m.statusAtual === "aguardando") {
+        statusTexto = "🟢 Aguardando corrida";
+      } else if (m.statusAtual === "desligado") {
+        statusTexto = "🔴 Desligado";
+      }
+      statusServico.textContent = `Situação: ${statusTexto}`;
+
+      container.appendChild(idLabel);
+      container.appendChild(nome);
+      container.appendChild(statusAtivo);
+      container.appendChild(statusServico);
+
+      if (m.ativo) {
+        const botao = document.createElement("button");
+        botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+        botao.onclick = async () => {
+          const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
+          await ref.update({ statusAtual: novoStatus });
+          carregarPainel();
+        };
+        container.appendChild(botao);
+      }
+
+      painel.appendChild(container);
     }
 
     carregarPainel();
