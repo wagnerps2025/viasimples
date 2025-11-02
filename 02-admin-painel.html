@@ -79,23 +79,6 @@
 </head>
 
 <body>
-  <script>
-    const usuario = localStorage.getItem("usuario");
-
-    if (usuario !== "motorista" && usuario !== "admin") {
-      document.write(`
-        <main style="text-align:center; padding:60px; font-family:sans-serif;">
-          <h2>🔒 Acesso restrito</h2>
-          <p>Você precisa estar autenticado como <strong>administrador</strong> ou <strong>motorista</strong> para visualizar esta página.</p>
-          <p>Redirecionando para login...</p>
-        </main>
-      `);
-      setTimeout(() => {
-        window.location.href = "00-login-admin.html";
-      }, 2000);
-    }
-  </script>
-
   <main class="container">
     <h1>Painel de Motoristas</h1>
 
@@ -122,7 +105,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const podeEditar = localStorage.getItem("usuario") === "admin";
+    // Acesso irrestrito para o administrador já autenticado
+    const podeEditar = true;
     let motoristas = [];
 
     async function carregarMotoristas() {
@@ -147,14 +131,11 @@
           const card = document.createElement("div");
           card.className = `motorista-card ${motorista.ativo ? 'ativo' : 'inativo'}`;
 
-          let botaoHTML = "";
-          if (podeEditar) {
-            botaoHTML = `
-              <button class="botao-status" onclick="alterarStatus(${index})">
-                ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
-              </button>
-            `;
-          }
+          const botaoHTML = `
+            <button class="botao-status" onclick="alterarStatus(${index})">
+              ${motorista.ativo ? "❌ Desativar" : "✅ Ativar"}
+            </button>
+          `;
 
           card.innerHTML = `
             <div class="motorista-id">🆔 ${motorista.id || "N/A"}</div>
@@ -177,8 +158,6 @@
     }
 
     async function alterarStatus(index) {
-      if (!podeEditar) return;
-
       const motorista = motoristas[index];
       motorista.ativo = !motorista.ativo;
 
@@ -197,4 +176,3 @@
   </script>
 </body>
 </html>
-

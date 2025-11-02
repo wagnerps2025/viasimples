@@ -78,9 +78,14 @@
       text-align: center;
     }
 
-    .motorista button {
+    .botao-container {
+      display: flex;
+      justify-content: center;
       margin-top: 12px;
-      padding: 10px;
+    }
+
+    .motorista button {
+      padding: 10px 20px;
       font-size: 14px;
       font-weight: bold;
       border: none;
@@ -110,7 +115,7 @@
 
       .motorista button {
         font-size: 13px;
-        padding: 8px;
+        padding: 8px 16px;
       }
     }
   </style>
@@ -211,6 +216,9 @@
       container.appendChild(statusServico);
 
       if (m.ativo && (usuario === "admin" || (usuario === "motorista" && motoristaId === id))) {
+        const botaoContainer = document.createElement("div");
+        botaoContainer.className = "botao-container";
+
         const botao = document.createElement("button");
         botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
         botao.onclick = async () => {
@@ -218,7 +226,9 @@
           await ref.update({ statusAtual: novoStatus });
           carregarPainel();
         };
-        container.appendChild(botao);
+
+        botaoContainer.appendChild(botao);
+        container.appendChild(botaoContainer);
       }
 
       painel.appendChild(container);

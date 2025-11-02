@@ -133,32 +133,6 @@
         }, 400);
       }
 
-      const usuario = localStorage.getItem("usuario");
-      const nomeAdmin = localStorage.getItem("nomeAdmin");
-
-      const isAdmin = usuario === "admin" && nomeAdmin === "Wagner Souza";
-
-      if (!usuario || (!["admin", "motorista", "visitante"].includes(usuario))) {
-        window.location.replace("00-login-admin.html");
-        return;
-      }
-
-      if (!isAdmin) {
-        document.querySelectorAll("a[href]").forEach(link => {
-          const href = link.getAttribute("href");
-          const acessoLivre = href.includes("03-simulador") || href.includes("00-login");
-          const acessoRestrito = href.includes("01-cadastro") || href.includes("02-admin") || href.includes("gerenciar") || href.includes("04-configuracoes");
-
-          if (acessoRestrito) {
-            link.addEventListener("click", function(e) {
-              e.preventDefault();
-              alert("🔒 Acesso restrito. Apenas administradores podem acessar esta área.");
-              window.location.href = "00-login-admin.html";
-            });
-          }
-        });
-      }
-
       const nome = localStorage.getItem("nomeAdmin") || localStorage.getItem("nomeVisitante") || "Usuário";
       const perfil = localStorage.getItem("usuario");
 

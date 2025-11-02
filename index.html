@@ -142,7 +142,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Login com senha
     document.getElementById("formLogin").addEventListener("submit", function(event) {
       event.preventDefault();
       autenticarUsuario();
@@ -161,6 +160,7 @@
       // Admin fixo
       if (nome === "Wagner Souza" && senha === "Master15012013") {
         localStorage.setItem("usuario", "admin");
+        localStorage.setItem("adminAutenticado", "true");
         exibirMensagem("✅ Bem-vindo, administrador!", "green");
         setTimeout(() => window.location.href = "index2.html", 1000);
         return;
@@ -193,7 +193,6 @@
       }
     }
 
-    // Acesso direto ao simulador
     document.getElementById("formVisitante").addEventListener("submit", function(event) {
       event.preventDefault();
       localStorage.setItem("usuario", "visitante");
