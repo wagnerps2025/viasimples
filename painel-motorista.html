@@ -144,7 +144,6 @@
   max-width: 300px;
 }
 
-	
   </style>
 </head>
 
@@ -259,35 +258,34 @@
     }
 
     async function verificarCorridaEmAndamento(motoristaId) {
-      const snapshot = await db.collection("corridas")
-        .where("motoristaId", "==", motoristaId)
-        .where("status", "==", "em_andamento")
-        .limit(1)
-        .get();
+  const snapshot = await db.collection("corridas")
+    .where("motoristaId", "==", motoristaId)
+    .where("status", "==", "em_andamento")
+    .orderBy("inicio", "desc")
+    .limit(1)
+    .get();
 
-      corridaAtual.innerHTML = "";
+  corridaAtual.innerHTML = "";
 
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        const corrida = doc.data();
-        const div = document.createElement("div");
-        div.className = "motorista";
-        div.innerHTML = `
-          <h2>🚕 Corrida em andamento</h2>
-          <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
-          <p>Telefone: ${corrida.telefone || "N/A"}</p>
-          <p>Origem: ${corrida.origem}</p>
-          <p>Destino: ${corrida.destino}</p>
-          <p>Início: ${new Date(corrida.inicio.toDate()).toLocaleString()}</p>
-          <p>Status: ${corrida.status}</p>
-          <div class="botao-container">
-            <button onclick="finalizarCorrida('${doc.id}', '${corrida.motoristaId}')">✅ Finalizar</button>
-            <button onclick="cancelarCorrida('${doc.id}', '${corrida.motoristaId}')">❌ Cancelar</button>
-          </div>
-        `;
-        corridaAtual.appendChild(div);
-      }
-    }
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    const corrida = doc.data();
+    const div = document.createElement("div");
+    div.className = "motorista";
+    div.innerHTML = `
+      <h2>🚕 Corrida em andamento</h2>
+      <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
+      <p>Telefone: ${corrida.telefone || "N/A"}</p>
+      <p>Origem: ${corrida.origem}</p>
+      <p>Destino: ${corrida.destino}</p>
+      <p>Início: ${new Date(corrida.inicio.toDate()).toLocaleString()}</p>
+      <p>Status: ${corrida.status}</p>
+     
+    `;
+    corridaAtual.appendChild(div);
+  }
+}
+
 
     async function finalizarCorrida(id, motoristaRefId) {
       await db.collection("corridas").doc(id).update({

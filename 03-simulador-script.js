@@ -44,12 +44,12 @@ window.initMap = function () {
   if (origemInput && destinoInput) {
     autocompleteOrigem = new google.maps.places.Autocomplete(origemInput, {
       componentRestrictions: { country: "br" },
-      fields: ["formatted_address", "geometry"],
+      fields: ["place_id", "geometry", "name", "formatted_address"]
     });
 
     autocompleteDestino = new google.maps.places.Autocomplete(destinoInput, {
       componentRestrictions: { country: "br" },
-      fields: ["formatted_address", "geometry"],
+      fields: ["place_id", "geometry", "name", "formatted_address"]
     });
   }
 };
@@ -145,7 +145,6 @@ window.calcularCorrida = async function () {
     document.getElementById("botaoLimpar").style.display = "inline-block";
   });
 };
-
 async function listarMotoristasAtivos() {
   const lista = document.getElementById("listaMotoristas");
   lista.innerHTML = "";
@@ -172,34 +171,33 @@ async function listarMotoristasAtivos() {
       }
 
       motoristas
-  .filter(m => m.statusAtual !== "desligado")
-  .forEach(motorista => {
+        .filter(m => m.statusAtual !== "desligado")
+        .forEach(motorista => {
+          const emServico = motorista.statusAtual === "em_servico";
+          const statusTexto = emServico
+            ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
+            : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
 
-        const emServico = motorista.statusAtual === "em_servico";
-        const statusTexto = emServico
-          ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
-          : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
-
-        const card = document.createElement("div");
-        card.className = "motorista-card ativo";
-        card.innerHTML = `
-          <div><strong>👤 ${motorista.nome}</strong></div>
-          <div>🏷️ Marca: ${motorista.marca}</div>
-          <div>🚗 Modelo: ${motorista.modelo}</div>
-          <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
-          <div>📅 Ano: ${motorista.ano}</div>
-          <div>🔠 Placa: ${motorista.placa}</div>
-          <div>🎨 Cor: ${motorista.cor}</div>
-          <div>📞 Telefone: ${motorista.telefone}</div>
-          ${statusTexto}
-          ${
-            !emServico
-              ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}')">📲 Escolher este motorista</button>`
-              : ""
-          }
-        `;
-        lista.appendChild(card);
-      });
+          const card = document.createElement("div");
+          card.className = "motorista-card ativo";
+          card.innerHTML = `
+            <div><strong>👤 ${motorista.nome}</strong></div>
+            <div>🏷️ Marca: ${motorista.marca}</div>
+            <div>🚗 Modelo: ${motorista.modelo}</div>
+            <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
+            <div>📅 Ano: ${motorista.ano}</div>
+            <div>🔠 Placa: ${motorista.placa}</div>
+            <div>🎨 Cor: ${motorista.cor}</div>
+            <div>📞 Telefone: ${motorista.telefone}</div>
+            ${statusTexto}
+            ${
+              !emServico
+                ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}', '${motorista.id}')">📲 Escolher este motorista</button>`
+                : ""
+            }
+          `;
+          lista.appendChild(card);
+        });
 
       const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
       if (corrida) {
@@ -223,7 +221,7 @@ async function listarMotoristasAtivos() {
     });
 }
 
-window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
+window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motoristaId) {
   if (localStorage.getItem("corridaAtiva")) {
     alert("Você já tem uma corrida ativa. Finalize ou cancele antes de solicitar outra.");
     return;
@@ -264,6 +262,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   window.open(linkWhatsApp, "_blank");
 
   motoristaEmServico = nomeMotorista;
+  localStorage.setItem("motoristaId", motoristaId);
   localStorage.setItem("corridaAtiva", JSON.stringify({
     motorista: nomeMotorista,
     passageiro: nomePassageiro,
@@ -276,20 +275,19 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
   if (db) {
     try {
       await db.collection("corridas").add({
+        motoristaId,
         passageiro: nomePassageiro,
         motorista: nomeMotorista,
         origem,
         destino,
-        valor: valorCorrida,
+        valor: parseFloat(valorCorrida.toFixed(2)),
         distancia: distanciaTexto,
         duracao: duracaoTexto,
-        data: new Date().toISOString()
+        inicio: new Date(),
+        status: "em_andamento"
       });
 
-      const snapshot = await db.collection("motoristas").where("nome", "==", nomeMotorista).get();
-      snapshot.forEach(doc => {
-        doc.ref.update({ statusAtual: "em_servico" });
-      });
+      await db.collection("motoristas").doc(motoristaId).update({ statusAtual: "em_servico" });
 
       console.log("✅ Corrida registrada e status atualizado");
     } catch (error) {
@@ -300,39 +298,31 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista) {
 
 function cancelarMotorista() {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
-  if (corrida && db) {
-    db.collection("motoristas")
-      .where("nome", "==", corrida.motorista)
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          doc.ref.update({ statusAtual: "aguardando" });
-        });
-      });
+  const motoristaId = localStorage.getItem("motoristaId");
+
+  if (corrida && db && motoristaId) {
+    db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
   }
 
   motoristaEmServico = null;
   localStorage.removeItem("corridaAtiva");
+  localStorage.removeItem("motoristaId");
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "❌ Corrida cancelada.";
 }
 
 function finalizarCorrida() {
   const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
-  if (!corrida) return;
+  const motoristaId = localStorage.getItem("motoristaId");
+
+  if (!corrida || !motoristaId) return;
 
   if (db) {
-    db.collection("motoristas")
-      .where("nome", "==", corrida.motorista)
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          doc.ref.update({ statusAtual: "aguardando" });
-        });
-      });
+    db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
   }
 
   localStorage.removeItem("corridaAtiva");
+  localStorage.removeItem("motoristaId");
   motoristaEmServico = null;
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
@@ -351,4 +341,5 @@ window.limparCampos = function () {
   distanciaTexto = "";
   duracaoTexto = "";
   localStorage.removeItem("corridaAtiva");
+  localStorage.removeItem("motoristaId");
 };
