@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ViaSimples - Acesso ao Sistema</title>
+
+  <!-- Manifesto para PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#FFD600" />
+
+  <!-- Estilos -->
   <link rel="stylesheet" href="style-viasimples.css" />
   <style>
     body {
@@ -129,6 +135,19 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Service Worker para PWA -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then(() => {
+        console.log("✅ Service Worker registrado");
+      }).catch(error => {
+        console.error("Erro ao registrar Service Worker:", error);
+      });
+    }
+  </script>
+
+  <!-- Lógica de autenticação -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
@@ -157,7 +176,6 @@
         return;
       }
 
-      // Admin fixo
       if (nome === "Wagner Souza" && senha === "Master15012013") {
         localStorage.setItem("usuario", "admin");
         localStorage.setItem("adminAutenticado", "true");
@@ -166,7 +184,6 @@
         return;
       }
 
-      // Autenticação de motorista via Firebase
       try {
         const snapshot = await db.collection("motoristas")
           .where("nome", "==", nome)
@@ -184,6 +201,7 @@
         localStorage.setItem("usuario", "motorista");
         localStorage.setItem("motoristaId", idFirebase);
         localStorage.setItem("motoristaNome", motorista.nome);
+        localStorage.setItem("email", motorista.email || "");
 
         exibirMensagem("✅ Acesso liberado!", "green");
         setTimeout(() => window.location.href = "painel-motorista.html", 1000);
