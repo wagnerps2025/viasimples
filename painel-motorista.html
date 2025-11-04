@@ -350,6 +350,16 @@
 
       const snapshot = await query.get();
       lista.innerHTML = "";
+	  
+	  if (!motoristaId) {
+  const email = localStorage.getItem("email");
+  const snapshot = await db.collection("motoristas").where("email", "==", email).limit(1).get();
+  if (!snapshot.empty) {
+    motoristaId = snapshot.docs[0].id;
+    localStorage.setItem("motoristaId", motoristaId);
+  }
+}
+
 
       if (snapshot.empty) {
         lista.innerHTML = "<p style='text-align:center;'>Nenhuma corrida encontrada nesse período.</p>";
