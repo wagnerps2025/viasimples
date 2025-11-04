@@ -248,14 +248,13 @@
     function escutarCorridaEmTempoReal(motoristaId) {
       db.collection("corridas")
         .where("motoristaId", "==", motoristaId)
-        .where("status", "==", "em_andamento")
         .orderBy("inicio", "desc")
         .limit(1)
         .onSnapshot(snapshot => {
           corridaAtual.innerHTML = "";
 
-          if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
+          const doc = snapshot.docs.find(d => d.data().status === "em_andamento");
+          if (doc) {
             const corrida = doc.data();
             const div = document.createElement("div");
             div.className = "motorista";
