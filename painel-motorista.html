@@ -167,7 +167,7 @@
     const corridaAtual = document.getElementById("corridaAtual");
 
     const usuario = localStorage.getItem("usuario");
-    const motoristaId = localStorage.getItem("motoristaId");
+    let motoristaId = localStorage.getItem("motoristaId");
 
     if (usuario !== "admin" && usuario !== "motorista") {
       document.body.innerHTML = `
@@ -184,12 +184,30 @@
       painel.innerHTML = "";
 
       try {
-        if (usuario === "motorista" && motoristaId) {
+        if (usuario === "motorista") {
+          if (!motoristaId) {
+            // Buscar motorista pelo e-mail autenticado (exemplo)
+            const email = localStorage.getItem("email");
+            if (email) {
+              const snapshot = await db.collection("motoristas").where("email", "==", email).limit(1).get();
+              if (!snapshot.empty) {
+                motoristaId = snapshot.docs[0].id;
+                localStorage.setItem("motoristaId", motoristaId);
+              }
+            }
+          }
+
+          if (!motoristaId) {
+            painel.innerHTML = "<p>Motorista não identificado.</p>";
+            return;
+          }
+
           const doc = await db.collection("motoristas").doc(motoristaId).get();
           if (!doc.exists) {
             painel.innerHTML = "<p>Motorista não encontrado.</p>";
             return;
           }
+
           renderizarMotorista(doc);
           escutarCorridaEmTempoReal(motoristaId);
         } else if (usuario === "admin") {
@@ -235,7 +253,6 @@
         botao.onclick = async () => {
           const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
           await ref.update({ statusAtual: novoStatus });
-          carregarPainel();
         };
 
         botaoContainer.appendChild(botao);
