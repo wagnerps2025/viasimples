@@ -81,17 +81,18 @@
     }
 
     .motorista button {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  background-color: var(--cor-principal);
-  color: #000;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 100%; /* ← Expande o botão */
-}
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--cor-principal);
+      color: #000;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+      max-width: 300px;
+    }
 
     .motorista button:hover {
       background-color: var(--cor-hover);
@@ -132,18 +133,6 @@
     .filtro-corridas button:hover {
       background-color: var(--cor-hover);
     }
-	
-	.motorista .botao-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
-}
-
-.motorista button {
-  width: 100%;
-  max-width: 300px;
-}
-
   </style>
 </head>
 
@@ -162,7 +151,6 @@
     </div>
     <div id="listaCorridas"></div>
   </div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDZKV7Gpy1VCSMxVW__w3PDCyepwJ7Vv6c",
@@ -246,7 +234,7 @@
         botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
         botao.onclick = async () => {
           const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-                    await ref.update({ statusAtual: novoStatus });
+          await ref.update({ statusAtual: novoStatus });
           carregarPainel();
         };
 
@@ -258,34 +246,36 @@
     }
 
     async function verificarCorridaEmAndamento(motoristaId) {
-  const snapshot = await db.collection("corridas")
-    .where("motoristaId", "==", motoristaId)
-    .where("status", "==", "em_andamento")
-    .orderBy("inicio", "desc")
-    .limit(1)
-    .get();
+      const snapshot = await db.collection("corridas")
+        .where("motoristaId", "==", motoristaId)
+        .where("status", "==", "em_andamento")
+        .orderBy("inicio", "desc")
+        .limit(1)
+        .get();
 
-  corridaAtual.innerHTML = "";
+      corridaAtual.innerHTML = "";
 
-  if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
-    const corrida = doc.data();
-    const div = document.createElement("div");
-    div.className = "motorista";
-    div.innerHTML = `
-      <h2>🚕 Corrida em andamento</h2>
-      <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
-      <p>Telefone: ${corrida.telefone || "N/A"}</p>
-      <p>Origem: ${corrida.origem}</p>
-      <p>Destino: ${corrida.destino}</p>
-      <p>Início: ${new Date(corrida.inicio.toDate()).toLocaleString()}</p>
-      <p>Status: ${corrida.status}</p>
-     
-    `;
-    corridaAtual.appendChild(div);
-  }
-}
-
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        const corrida = doc.data();
+        const div = document.createElement("div");
+        div.className = "motorista";
+        div.innerHTML = `
+          <h2>🚕 Corrida em andamento</h2>
+          <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
+          <p>Telefone: ${corrida.telefone || "N/A"}</p>
+          <p>Origem: ${corrida.origem}</p>
+          <p>Destino: ${corrida.destino}</p>
+          <p>Início: ${new Date(corrida.inicio.toDate()).toLocaleString()}</p>
+          <p>Status: ${corrida.status}</p>
+          <div class="botao-container">
+            <button onclick="finalizarCorrida('${doc.id}', '${corrida.motoristaId}')">✅ Finalizar</button>
+            <button onclick="cancelarCorrida('${doc.id}', '${corrida.motoristaId}')">❌ Cancelar</button>
+          </div>
+        `;
+        corridaAtual.appendChild(div);
+      }
+    }
 
     async function finalizarCorrida(id, motoristaRefId) {
       await db.collection("corridas").doc(id).update({
@@ -299,8 +289,8 @@
         });
       }
 
-      verificarCorridaEmAndamento(motoristaId);
-      filtrarCorridas();
+      await verificarCorridaEmAndamento(motoristaId);
+      await filtrarCorridas();
     }
 
     async function cancelarCorrida(id, motoristaRefId) {
@@ -315,45 +305,36 @@
         });
       }
 
-      verificarCorridaEmAndamento(motoristaId);
-      filtrarCorridas();
+      await verificarCorridaEmAndamento(motoristaId);
+      await filtrarCorridas();
     }
-	
-	async function filtrarCorridas() {
-  const lista = document.getElementById("listaCorridas");
-  lista.innerHTML = "🔄 Buscando corridas...";
-
-  const dataInicioInput = document.getElementById("dataInicio").value;
-  const dataFimInput = document.getElementById("dataFim").value;
-
-  if (!dataInicioInput || !dataFimInput) {
-    alert("Por favor, selecione as datas de início e fim.");
-    return;
-  }
-
-  const inicio = new Date(dataInicioInput);
-  const fim = new Date(dataFimInput);
-  fim.setHours(23, 59, 59, 999);
-
-  // ...continuação da consulta ao Firebase
-}
-
 
     async function filtrarCorridas() {
       const lista = document.getElementById("listaCorridas");
       lista.innerHTML = "🔄 Buscando corridas...";
 
-      const inicio = new Date(document.getElementById("dataInicio").value);
-      const fim = new Date(document.getElementById("dataFim").value);
+      const dataInicioInput = document.getElementById("dataInicio").value;
+      const dataFimInput = document.getElementById("dataFim").value;
+
+      if (!dataInicioInput || !dataFimInput) {
+        alert("Por favor, selecione as datas de início e fim.");
+        return;
+      }
+
+      const inicio = new Date(dataInicioInput);
+      const fim = new Date(dataFimInput);
       fim.setHours(23, 59, 59, 999);
 
-      const snapshot = await db.collection("corridas")
-        .where("motoristaId", "==", motoristaId)
+      let query = db.collection("corridas")
         .where("inicio", ">=", inicio)
         .where("inicio", "<=", fim)
-        .orderBy("inicio", "desc")
-        .get();
+        .orderBy("inicio", "desc");
 
+      if (usuario === "motorista" && motoristaId) {
+        query = query.where("motoristaId", "==", motoristaId);
+      }
+
+      const snapshot = await query.get();
       lista.innerHTML = "";
 
       if (snapshot.empty) {
