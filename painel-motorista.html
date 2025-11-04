@@ -16,12 +16,6 @@
       --fonte: 'Segoe UI', 'Roboto', sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
       font-family: var(--fonte);
       background-color: var(--cor-fundo);
@@ -81,60 +75,94 @@
     .botao-container {
       display: flex;
       justify-content: center;
+      gap: 10px;
       margin-top: 12px;
+      flex-wrap: wrap;
     }
 
     .motorista button {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      background-color: var(--cor-principal);
-      color: #000;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      width: 100%;
-      max-width: 300px;
-    }
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--cor-principal);
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%; /* ← Expande o botão */
+}
 
     .motorista button:hover {
       background-color: var(--cor-hover);
     }
 
-    @media (max-width: 480px) {
-      body {
-        padding: 10px;
-      }
-
-      h1 {
-        font-size: 20px;
-        margin-bottom: 16px;
-      }
-
-      .motorista {
-        padding: 12px;
-      }
-
-      .motorista h2 {
-        font-size: 18px;
-      }
-
-      .motorista p {
-        font-size: 14px;
-      }
-
-      .motorista button {
-        font-size: 13px;
-        padding: 10px;
-        max-width: 100%;
-      }
+    .filtro-corridas {
+      background-color: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-top: 20px;
     }
+
+    .filtro-corridas h2 {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .filtro-corridas label {
+      margin: 0 8px;
+    }
+
+    .filtro-corridas input {
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .filtro-corridas button {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      background-color: var(--cor-principal);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .filtro-corridas button:hover {
+      background-color: var(--cor-hover);
+    }
+	
+	.motorista .botao-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.motorista button {
+  width: 100%;
+  max-width: 300px;
+}
+
+	
   </style>
 </head>
+
 <body>
   <h1>🚖 Painel do Motorista</h1>
+
   <div class="painel" id="painelMotoristas">Carregando dados...</div>
+  <div class="painel" id="corridaAtual"></div>
+
+  <div class="filtro-corridas painel">
+    <h2>📅 Histórico de Corridas</h2>
+    <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:12px;">
+      <label>De: <input type="date" id="dataInicio"></label>
+      <label>Até: <input type="date" id="dataFim"></label>
+      <button onclick="filtrarCorridas()">🔍 Buscar</button>
+    </div>
+    <div id="listaCorridas"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -149,6 +177,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const painel = document.getElementById("painelMotoristas");
+    const corridaAtual = document.getElementById("corridaAtual");
 
     const usuario = localStorage.getItem("usuario");
     const motoristaId = localStorage.getItem("motoristaId");
@@ -165,11 +194,9 @@
     }
 
     async function carregarPainel() {
-      painel.innerHTML = "Carregando dados...";
+      painel.innerHTML = "";
 
       try {
-        painel.innerHTML = "";
-
         if (usuario === "motorista" && motoristaId) {
           const doc = await db.collection("motoristas").doc(motoristaId).get();
           if (!doc.exists) {
@@ -177,6 +204,7 @@
             return;
           }
           renderizarMotorista(doc);
+          verificarCorridaEmAndamento(motoristaId);
         } else if (usuario === "admin") {
           const lista = await db.collection("motoristas").get();
           if (lista.empty) {
@@ -199,33 +227,17 @@
       const container = document.createElement("div");
       container.className = "motorista";
 
-      const idLabel = document.createElement("div");
-      idLabel.className = "motorista-id";
-      idLabel.textContent = `ID: ${id}`;
-
-      const nome = document.createElement("h2");
-      nome.textContent = m.nome;
-
-      const statusAtivo = document.createElement("p");
-      statusAtivo.textContent = `Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}`;
-
-      const statusServico = document.createElement("p");
-      let statusTexto = "🔴 Indisponível";
-      if (!m.ativo) {
-        statusTexto = "🔒 Bloqueado";
-      } else if (m.statusAtual === "em_servico") {
-        statusTexto = "🚧 Em serviço";
-      } else if (m.statusAtual === "aguardando") {
-        statusTexto = "🟢 Aguardando corrida";
-      } else if (m.statusAtual === "desligado") {
-        statusTexto = "🔴 Desligado";
-      }
-      statusServico.textContent = `Situação: ${statusTexto}`;
-
-      container.appendChild(idLabel);
-      container.appendChild(nome);
-      container.appendChild(statusAtivo);
-      container.appendChild(statusServico);
+      container.innerHTML = `
+        <div class="motorista-id">ID: ${id}</div>
+        <h2>${m.nome}</h2>
+        <p>Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}</p>
+        <p>Situação: ${
+          !m.ativo ? "🔒 Bloqueado" :
+          m.statusAtual === "em_servico" ? "🟡 Em serviço" :
+          m.statusAtual === "aguardando" ? "🟢 Aguardando corrida" :
+          "🔴 Desligado"
+        }</p>
+      `;
 
       if (m.ativo && (usuario === "admin" || (usuario === "motorista" && motoristaId === id))) {
         const botaoContainer = document.createElement("div");
@@ -235,7 +247,7 @@
         botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
         botao.onclick = async () => {
           const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-          await ref.update({ statusAtual: novoStatus });
+                    await ref.update({ statusAtual: novoStatus });
           carregarPainel();
         };
 
@@ -244,6 +256,135 @@
       }
 
       painel.appendChild(container);
+    }
+
+    async function verificarCorridaEmAndamento(motoristaId) {
+      const snapshot = await db.collection("corridas")
+        .where("motoristaId", "==", motoristaId)
+        .where("status", "==", "em_andamento")
+        .limit(1)
+        .get();
+
+      corridaAtual.innerHTML = "";
+
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        const corrida = doc.data();
+        const div = document.createElement("div");
+        div.className = "motorista";
+        div.innerHTML = `
+          <h2>🚕 Corrida em andamento</h2>
+          <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
+          <p>Telefone: ${corrida.telefone || "N/A"}</p>
+          <p>Origem: ${corrida.origem}</p>
+          <p>Destino: ${corrida.destino}</p>
+          <p>Início: ${new Date(corrida.inicio.toDate()).toLocaleString()}</p>
+          <p>Status: ${corrida.status}</p>
+          <div class="botao-container">
+            <button onclick="finalizarCorrida('${doc.id}', '${corrida.motoristaId}')">✅ Finalizar</button>
+            <button onclick="cancelarCorrida('${doc.id}', '${corrida.motoristaId}')">❌ Cancelar</button>
+          </div>
+        `;
+        corridaAtual.appendChild(div);
+      }
+    }
+
+    async function finalizarCorrida(id, motoristaRefId) {
+      await db.collection("corridas").doc(id).update({
+        status: "finalizada",
+        fim: new Date()
+      });
+
+      if (motoristaRefId) {
+        await db.collection("motoristas").doc(motoristaRefId).update({
+          statusAtual: "aguardando"
+        });
+      }
+
+      verificarCorridaEmAndamento(motoristaId);
+      filtrarCorridas();
+    }
+
+    async function cancelarCorrida(id, motoristaRefId) {
+      await db.collection("corridas").doc(id).update({
+        status: "cancelada",
+        fim: new Date()
+      });
+
+      if (motoristaRefId) {
+        await db.collection("motoristas").doc(motoristaRefId).update({
+          statusAtual: "aguardando"
+        });
+      }
+
+      verificarCorridaEmAndamento(motoristaId);
+      filtrarCorridas();
+    }
+	
+	async function filtrarCorridas() {
+  const lista = document.getElementById("listaCorridas");
+  lista.innerHTML = "🔄 Buscando corridas...";
+
+  const dataInicioInput = document.getElementById("dataInicio").value;
+  const dataFimInput = document.getElementById("dataFim").value;
+
+  if (!dataInicioInput || !dataFimInput) {
+    alert("Por favor, selecione as datas de início e fim.");
+    return;
+  }
+
+  const inicio = new Date(dataInicioInput);
+  const fim = new Date(dataFimInput);
+  fim.setHours(23, 59, 59, 999);
+
+  // ...continuação da consulta ao Firebase
+}
+
+
+    async function filtrarCorridas() {
+      const lista = document.getElementById("listaCorridas");
+      lista.innerHTML = "🔄 Buscando corridas...";
+
+      const inicio = new Date(document.getElementById("dataInicio").value);
+      const fim = new Date(document.getElementById("dataFim").value);
+      fim.setHours(23, 59, 59, 999);
+
+      const snapshot = await db.collection("corridas")
+        .where("motoristaId", "==", motoristaId)
+        .where("inicio", ">=", inicio)
+        .where("inicio", "<=", fim)
+        .orderBy("inicio", "desc")
+        .get();
+
+      lista.innerHTML = "";
+
+      if (snapshot.empty) {
+        lista.innerHTML = "<p style='text-align:center;'>Nenhuma corrida encontrada nesse período.</p>";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const c = doc.data();
+        const item = document.createElement("div");
+        item.className = "motorista";
+        item.innerHTML = `
+          <h2>🗓️ ${new Date(c.inicio.toDate()).toLocaleString()}</h2>
+          <p>Passageiro: ${c.passageiro || "N/A"}</p>
+          <p>Telefone: ${c.telefone || "N/A"}</p>
+          <p>Origem: ${c.origem}</p>
+          <p>Destino: ${c.destino}</p>
+          <p>Status: ${c.status}</p>
+          ${
+            c.status === "em_andamento"
+              ? `<div class="botao-container">
+                  <button onclick="finalizarCorrida('${doc.id}', '${c.motoristaId}')">✅ Finalizar</button>
+                  <button onclick="cancelarCorrida('${doc.id}', '${c.motoristaId}')">❌ Cancelar</button>
+                </div>`
+              : ""
+          }
+        `;
+        lista.appendChild(item);
+      });
     }
 
     carregarPainel();
