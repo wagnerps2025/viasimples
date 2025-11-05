@@ -270,7 +270,8 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motor
     destino,
     valor: valorCorrida
   }));
-  listarMotoristasAtivos();
+
+  listarMotoristasAtivos(); // ✅ Isso vai renderizar os botões no card do motorista
 
   if (db) {
     try {
@@ -302,6 +303,18 @@ function cancelarMotorista() {
 
   if (corrida && db && motoristaId) {
     db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
+
+    db.collection("corridas")
+      .where("motoristaId", "==", motoristaId)
+      .orderBy("inicio", "desc")
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          const docId = snapshot.docs[0].id;
+          db.collection("corridas").doc(docId).update({ status: "cancelada" });
+        }
+      });
   }
 
   motoristaEmServico = null;
@@ -319,6 +332,18 @@ function finalizarCorrida() {
 
   if (db) {
     db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
+
+    db.collection("corridas")
+      .where("motoristaId", "==", motoristaId)
+      .orderBy("inicio", "desc")
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          const docId = snapshot.docs[0].id;
+          db.collection("corridas").doc(docId).update({ status: "finalizada" });
+        }
+      });
   }
 
   localStorage.removeItem("corridaAtiva");
@@ -327,19 +352,3 @@ function finalizarCorrida() {
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
-
-window.limparCampos = function () {
-  document.getElementById("formSimulador")?.reset();
-  document.getElementById("resultadoCorrida").innerHTML = "";
-  document.getElementById("listaMotoristas").innerHTML = "";
-  document.getElementById("botaoLimpar").style.display = "none";
-  window.directionsRenderer.setDirections({ routes: [] });
-  motoristaEmServico = null;
-  coordenadasOrigem = null;
-  coordenadasDestino = null;
-  valorCorrida = 0;
-  distanciaTexto = "";
-  duracaoTexto = "";
-  localStorage.removeItem("corridaAtiva");
-  localStorage.removeItem("motoristaId");
-};
