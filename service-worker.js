@@ -13,7 +13,8 @@ const FILES_TO_CACHE = [
 self.addEventListener("install", event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
       const validFiles = [];
 
       for (const file of FILES_TO_CACHE) {
@@ -29,8 +30,8 @@ self.addEventListener("install", event => {
         }
       }
 
-      return cache.addAll(validFiles);
-    }).catch(error => {
+      await cache.addAll(validFiles);
+    })().catch(error => {
       console.error("❌ Falha ao adicionar arquivos ao cache:", error);
     })
   );
@@ -43,6 +44,7 @@ self.addEventListener("activate", event => {
       Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME) {
+            console.log(`🧹 Removendo cache antigo: ${key}`);
             return caches.delete(key);
           }
         })
@@ -56,12 +58,15 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request).catch(() => {
-        // Fallback para página inicial offline
-        if (event.request.mode === "navigate") {
-          return caches.match("/viasimples/index.html");
-        }
-      });
+      return (
+        response ||
+        fetch(event.request).catch(() => {
+          // Fallback para página inicial offline
+          if (event.request.mode === "navigate") {
+            return caches.match("/viasimples/index.html");
+          }
+        })
+      );
     })
   );
 });
