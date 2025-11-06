@@ -1,7 +1,7 @@
 {
   "name": "ViaSimples Simulador",
   "short_name": "Simulador",
-  "start_url": "/viasimples/simulador.html",
+  "start_url": "/viasimples/03-simulador.html",
   "scope": "/viasimples/",
   "display": "standalone",
   "orientation": "portrait",
@@ -27,4 +27,5 @@
     }
   ]
 }
+
 
