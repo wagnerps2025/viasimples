@@ -3,10 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulador de Corrida - ViaSimples</title>
-  <link rel="manifest" href="/viasimples/manifest-simulador.json">
-  <link rel="stylesheet" href="style-viasimples.css" />
+  <title>Simulador de Corrida – ViaSimples</title>
+
+  <!-- Manifesto PWA do simulador -->
+  <link rel="manifest" href="/viasimples/manifest-simulador.json" />
+
+  <!-- Estilos do simulador -->
+  <link rel="stylesheet" href="/viasimples/style-viasimples.css" />
 </head>
+
 
 <body>
   <main class="container">
@@ -62,31 +67,31 @@
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/viasimples/service-worker.js")
-      .then(() => console.log("✅ Service Worker registrado"))
-      .catch(err => console.error("❌ Erro ao registrar SW:", err));
+      .then(() => console.log("✅ Service Worker registrado com sucesso"))
+      .catch(error => console.error("❌ Erro ao registrar o Service Worker:", error));
   }
 </script>
 
 <!-- Banner de instalação do PWA -->
-<div id="install-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #FFD600; padding: 1em; text-align: center; z-index: 9999;">
+<div id="install-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #FFD600; padding: 1em; text-align: center; z-index: 9999;">
   <span>📲 Instale o Simulador ViaSimples para uma experiência completa!</span>
   <button id="install-button" style="margin-left: 1em; padding: 0.5em 1em;">Instalar</button>
 </div>
 
-<!-- Script de controle do banner de instalação -->
+<!-- Controle do banner de instalação -->
 <script>
   let deferredPrompt;
 
   const isStandalone =
     window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true;
+    navigator.standalone === true;
 
   const bannerShown = localStorage.getItem("simuladorInstallPromptShown");
 
   if (!isStandalone && !bannerShown) {
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
 
       const banner = document.getElementById("install-banner");
       banner.style.display = "block";
@@ -97,11 +102,11 @@
         banner.style.display = "none";
         deferredPrompt.prompt();
 
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === "accepted") {
-            console.log("✅ Simulador instalado");
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === "accepted") {
+            console.log("✅ Simulador ViaSimples instalado");
           } else {
-            console.log("❌ Instalação recusada");
+            console.log("❌ Usuário recusou a instalação");
           }
           deferredPrompt = null;
         });
@@ -111,8 +116,8 @@
 </script>
 
 
+
 </body>
 </html>
-
 
 
