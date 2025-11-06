@@ -182,230 +182,233 @@
     }
 
     async function carregarPainel() {
-  painel.innerHTML = "";
+      painel.innerHTML = "";
 
-  try {
-    if (usuario === "motorista") {
-      if (!motoristaId) {
-        const email = localStorage.getItem("email");
-        if (email) {
-          const snapshot = await db.collection("motoristas").where("email", "==", email).limit(1).get();
-          if (!snapshot.empty) {
-            motoristaId = snapshot.docs[0].id;
-            localStorage.setItem("motoristaId", motoristaId);
+      try {
+        if (usuario === "motorista") {
+          if (!motoristaId) {
+            const email = localStorage.getItem("email");
+            if (email) {
+              const snapshot = await db.collection("motoristas").where("email", "==", email).limit(1).get();
+              if (!snapshot.empty) {
+                motoristaId = snapshot.docs[0].id;
+                localStorage.setItem("motoristaId", motoristaId);
+              }
+            }
           }
+
+          if (!motoristaId) {
+            painel.innerHTML = "<p>Motorista não identificado.</p>";
+            return;
+          }
+
+          escutarMotoristaEmTempoReal(motoristaId);
+          escutarCorridasEmTempoReal(motoristaId);
+
+        } else if (usuario === "admin") {
+          const lista = await db.collection("motoristas").get();
+          if (lista.empty) {
+            painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
+            return;
+          }
+
+          lista.forEach(doc => {
+            renderizarMotorista(doc);
+            escutarMotoristaEmTempoReal(doc.id);
+          });
+
+          escutarCorridasEmTempoRealAdmin();
         }
+      } catch (error) {
+        console.error("Erro ao carregar motoristas:", error);
+        painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
       }
-
-      if (!motoristaId) {
-        painel.innerHTML = "<p>Motorista não identificado.</p>";
-        return;
-      }
-
-      escutarMotoristaEmTempoReal(motoristaId);
-      escutarCorridasEmTempoReal(motoristaId);
-
-    } else if (usuario === "admin") {
-      const lista = await db.collection("motoristas").get();
-      if (lista.empty) {
-        painel.innerHTML = "<p>Nenhum motorista cadastrado.</p>";
-        return;
-      }
-
-      lista.forEach(doc => {
-        renderizarMotorista(doc);
-        escutarMotoristaEmTempoReal(doc.id);
-      });
-
-      escutarCorridasEmTempoRealAdmin();
     }
-  } catch (error) {
-    console.error("Erro ao carregar motoristas:", error);
-    painel.innerHTML = "<p>Erro ao acessar os dados.</p>";
-  }
-}
 
-function escutarMotoristaEmTempoReal(id) {
-  db.collection("motoristas").doc(id).onSnapshot(doc => {
-    const existente = document.querySelector(`.motorista[data-id="${id}"]`);
-    if (existente) existente.remove();
-    renderizarMotorista(doc);
-  });
-}
-
-function renderizarMotorista(doc) {
-  const m = doc.data();
-  const ref = doc.ref;
-  const id = doc.id;
-
-  const container = document.createElement("div");
-  container.className = "motorista";
-  container.setAttribute("data-id", id);
-
-  container.innerHTML = `
-    <div class="motorista-id">ID: ${id}</div>
-    <h2>${m.nome}</h2>
-    <p>Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}</p>
-    <p>Situação: ${
-      !m.ativo ? "🔒 Bloqueado" :
-      m.statusAtual === "em_servico" ? "🟡 Em serviço" :
-      m.statusAtual === "aguardando" ? "🟢 Aguardando corrida" :
-      "🔴 Desligado"
-    }</p>
-  `;
-
-  if (m.ativo && (usuario === "admin" || (usuario === "motorista" && motoristaId === id))) {
-    const botaoContainer = document.createElement("div");
-    botaoContainer.className = "botao-container";
-
-    const botao = document.createElement("button");
-    botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
-    botao.onclick = async () => {
-      const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
-      await ref.update({ statusAtual: novoStatus });
-    };
-
-    botaoContainer.appendChild(botao);
-    container.appendChild(botaoContainer);
-  }
-
-  painel.appendChild(container);
-}
-
-function escutarCorridasEmTempoReal(motoristaId) {
-  db.collection("corridas")
-    .where("motoristaId", "==", motoristaId)
-    .onSnapshot(snapshot => {
-      corridaAtual.innerHTML = "";
-
-      const corridasAtivas = snapshot.docs.filter(doc => {
-        const dados = doc.data();
-        return dados.status === "em_andamento";
+    function escutarMotoristaEmTempoReal(id) {
+      db.collection("motoristas").doc(id).onSnapshot(doc => {
+        const existente = document.querySelector(`.motorista[data-id="${id}"]`);
+        if (existente) existente.remove();
+        renderizarMotorista(doc);
       });
+    }
 
-      if (corridasAtivas.length === 0) {
-        corridaAtual.innerHTML = "<p style='text-align:center;'>Nenhuma corrida em andamento.</p>";
+    function renderizarMotorista(doc) {
+      const m = doc.data();
+      const ref = doc.ref;
+      const id = doc.id;
+
+      const container = document.createElement("div");
+      container.className = "motorista";
+      container.setAttribute("data-id", id);
+
+      if (usuario === "motorista" && motoristaId === id && m.statusAtual === "em_servico") {
+  container.style.backgroundColor = "#e6ffe6"; // verde clarinho
+}
+
+
+      container.innerHTML = `
+        <div class="motorista-id">ID: ${id}</div>
+        <h2>${m.nome}</h2>
+        <p>Status: ${m.ativo ? "✅ Ativo" : "❌ Inativo"}</p>
+        <p>Situação: ${
+          !m.ativo ? "🔒 Bloqueado" :
+          m.statusAtual === "em_servico" ? "🟡 Em serviço" :
+          m.statusAtual === "aguardando" ? "🟢 Aguardando corrida" :
+          "🔴 Desligado"
+        }</p>
+      `;
+
+      if (m.ativo && (usuario === "admin" || (usuario === "motorista" && motoristaId === id))) {
+        const botaoContainer = document.createElement("div");
+        botaoContainer.className = "botao-container";
+
+        const botao = document.createElement("button");
+        botao.textContent = m.statusAtual === "desligado" ? "🔌 Ligar" : "⛔ Desligar";
+        botao.onclick = async () => {
+          const novoStatus = m.statusAtual === "desligado" ? "aguardando" : "desligado";
+          await ref.update({ statusAtual: novoStatus });
+        };
+
+        botaoContainer.appendChild(botao);
+        container.appendChild(botaoContainer);
+      }
+
+      painel.appendChild(container);
+    }
+
+    function escutarCorridasEmTempoReal(motoristaId) {
+      db.collection("corridas")
+        .where("motoristaId", "==", motoristaId)
+        .onSnapshot(snapshot => {
+          corridaAtual.innerHTML = "";
+
+          const corridasAtivas = snapshot.docs.filter(doc => {
+            const dados = doc.data();
+            return dados.status === "em_andamento";
+          });
+
+          if (corridasAtivas.length === 0) {
+            corridaAtual.innerHTML = "<p style='text-align:center;'>Nenhuma corrida em andamento.</p>";
+            return;
+          }
+
+          corridasAtivas.forEach(doc => {
+            const corrida = doc.data();
+            const div = document.createElement("div");
+            div.className = "motorista";
+
+            const inicioFormatado = corrida.inicio?.toDate
+              ? new Date(corrida.inicio.toDate()).toLocaleString()
+              : "N/A";
+
+            div.innerHTML = `
+              <h2>🚕 Corrida em andamento</h2>
+              <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
+              <p>Telefone: ${corrida.telefone || "N/A"}</p>
+              <p>Origem: ${corrida.origem || "N/A"}</p>
+              <p>Destino: ${corrida.destino || "N/A"}</p>
+              <p>Início: ${inicioFormatado}</p>
+              <p>Status: ${corrida.status}</p>
+            `;
+
+            corridaAtual.appendChild(div);
+          });
+        });
+    }
+
+    function escutarCorridasEmTempoRealAdmin() {
+      db.collection("corridas")
+        .onSnapshot(snapshot => {
+          corridaAtual.innerHTML = "";
+
+          const corridasAtivas = snapshot.docs.filter(doc => {
+            const dados = doc.data();
+            return dados.status === "em_andamento";
+          });
+
+          if (corridasAtivas.length === 0) {
+            corridaAtual.innerHTML = "<p style='text-align:center;'>Nenhuma corrida em andamento.</p>";
+            return;
+          }
+
+          corridasAtivas.forEach(doc => {
+            const corrida = doc.data();
+            const div = document.createElement("div");
+            div.className = "motorista";
+
+            const inicioFormatado = corrida.inicio?.toDate
+              ? new Date(corrida.inicio.toDate()).toLocaleString()
+              : "N/A";
+
+            div.innerHTML = `
+              <h2>🚕 Corrida em andamento</h2>
+              <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
+              <p>Motorista: ${corrida.motorista || "N/A"}</p>
+              <p>Telefone: ${corrida.telefone || "N/A"}</p>
+              <p>Origem: ${corrida.origem || "N/A"}</p>
+              <p>Destino: ${corrida.destino || "N/A"}</p>
+              <p>Início da corrida: ${inicioFormatado}</p>
+              <p>Situação atual: ${corrida.status}</p>
+            `;
+
+                        corridaAtual.appendChild(div);
+          });
+        });
+    }
+
+    async function filtrarCorridas() {
+      const lista = document.getElementById("listaCorridas");
+      lista.innerHTML = "🔄 Buscando corridas...";
+
+      const dataInicioInput = document.getElementById("dataInicio").value;
+      const dataFimInput = document.getElementById("dataFim").value;
+
+      if (!dataInicioInput || !dataFimInput) {
+        alert("Por favor, selecione as datas de início e fim.");
         return;
       }
 
-      corridasAtivas.forEach(doc => {
-        const corrida = doc.data();
-        const div = document.createElement("div");
-        div.className = "motorista";
+      const inicio = new Date(dataInicioInput);
+      const fim = new Date(dataFimInput);
+      fim.setHours(23, 59, 59, 999);
 
-        const inicioFormatado = corrida.inicio?.toDate
-          ? new Date(corrida.inicio.toDate()).toLocaleString()
-          : "N/A";
+      let query = db.collection("corridas")
+        .where("inicio", ">=", inicio)
+        .where("inicio", "<=", fim)
+        .orderBy("inicio", "desc");
 
-        div.innerHTML = `
-          <h2>🚕 Corrida em andamento</h2>
-          <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
-          <p>Telefone: ${corrida.telefone || "N/A"}</p>
-          <p>Origem: ${corrida.origem || "N/A"}</p>
-          <p>Destino: ${corrida.destino || "N/A"}</p>
-          <p>Início: ${inicioFormatado}</p>
-          <p>Status: ${corrida.status}</p>
-        `;
+      if (usuario === "motorista" && motoristaId) {
+        query = query.where("motoristaId", "==", motoristaId);
+      }
 
-        corridaAtual.appendChild(div);
-      });
-    });
-}
+      const snapshot = await query.get();
+      lista.innerHTML = "";
 
-function escutarCorridasEmTempoRealAdmin() {
-  db.collection("corridas")
-    .onSnapshot(snapshot => {
-      corridaAtual.innerHTML = "";
-
-      const corridasAtivas = snapshot.docs.filter(doc => {
-        const dados = doc.data();
-        return dados.status === "em_andamento";
-      });
-
-      if (corridasAtivas.length === 0) {
-        corridaAtual.innerHTML = "<p style='text-align:center;'>Nenhuma corrida em andamento.</p>";
+      if (snapshot.empty) {
+        lista.innerHTML = "<p style='text-align:center;'>Nenhuma corrida encontrada nesse período.</p>";
         return;
       }
 
-      corridasAtivas.forEach(doc => {
-        const corrida = doc.data();
-        const div = document.createElement("div");
-        div.className = "motorista";
-
-        const inicioFormatado = corrida.inicio?.toDate
-          ? new Date(corrida.inicio.toDate()).toLocaleString()
-          : "N/A";
-
-        div.innerHTML = `
-          <h2>🚕 Corrida em andamento</h2>
-          <p>Passageiro: ${corrida.passageiro || "N/A"}</p>
-          <p>Motorista: ${corrida.motorista || "N/A"}</p>
-          <p>Telefone: ${corrida.telefone || "N/A"}</p>
-          <p>Origem: ${corrida.origem || "N/A"}</p>
-          <p>Destino: ${corrida.destino || "N/A"}</p>
-          <p>Início: ${inicioFormatado}</p>
-          <p>Status: ${corrida.status}</p>
+      snapshot.forEach(doc => {
+        const c = doc.data();
+        const item = document.createElement("div");
+        item.className = "motorista";
+        item.innerHTML = `
+          <h2>🗓️ ${new Date(c.inicio.toDate()).toLocaleString()}</h2>
+          <p>Passageiro: ${c.passageiro || "N/A"}</p>
+          <p>Telefone: ${c.telefone || "N/A"}</p>
+          <p>Origem: ${c.origem || "N/A"}</p>
+          <p>Destino: ${c.destino || "N/A"}</p>
+          <p>Status: ${c.status}</p>
         `;
-
-        corridaAtual.appendChild(div);
+        lista.appendChild(item);
       });
-    });
-}
+    }
 
-async function filtrarCorridas() {
-  const lista = document.getElementById("listaCorridas");
-  lista.innerHTML = "🔄 Buscando corridas...";
-
-  const dataInicioInput = document.getElementById("dataInicio").value;
-  const dataFimInput = document.getElementById("dataFim").value;
-
-  if (!dataInicioInput || !dataFimInput) {
-    alert("Por favor, selecione as datas de início e fim.");
-    return;
-  }
-
-  const inicio = new Date(dataInicioInput);
-  const fim = new Date(dataFimInput);
-  fim.setHours(23, 59, 59, 999);
-
-  let query = db.collection("corridas")
-    .where("inicio", ">=", inicio)
-    .where("inicio", "<=", fim)
-    .orderBy("inicio", "desc");
-
-  if (usuario === "motorista" && motoristaId) {
-    query = query.where("motoristaId", "==", motoristaId);
-  }
-
-  const snapshot = await query.get();
-  lista.innerHTML = "";
-
-  if (snapshot.empty) {
-    lista.innerHTML = "<p style='text-align:center;'>Nenhuma corrida encontrada nesse período.</p>";
-    return;
-  }
-
-  snapshot.forEach(doc => {
-    const c = doc.data();
-    const item = document.createElement("div");
-    item.className = "motorista";
-    item.innerHTML = `
-      <h2>🗓️ ${new Date(c.inicio.toDate()).toLocaleString()}</h2>
-      <p>Passageiro: ${c.passageiro || "N/A"}</p>
-      <p>Telefone: ${c.telefone || "N/A"}</p>
-      <p>Origem: ${c.origem || "N/A"}</p>
-      <p>Destino: ${c.destino || "N/A"}</p>
-      <p>Status: ${c.status}</p>
-    `;
-    lista.appendChild(item);
-  });
-}
-
-carregarPainel();
-
+    carregarPainel();
   </script>
 </body>
 </html>
-
 
 

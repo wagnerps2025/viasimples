@@ -171,33 +171,43 @@ async function listarMotoristasAtivos() {
       }
 
       motoristas
-        .filter(m => m.statusAtual !== "desligado")
-        .forEach(motorista => {
-          const emServico = motorista.statusAtual === "em_servico";
-          const statusTexto = emServico
-            ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
-            : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
+  .filter(m => m.statusAtual !== "desligado")
+  .forEach(motorista => {
+    const emServico = motorista.statusAtual === "em_servico";
 
-          const card = document.createElement("div");
-          card.className = "motorista-card ativo";
-          card.innerHTML = `
-            <div><strong>👤 ${motorista.nome}</strong></div>
-            <div>🏷️ Marca: ${motorista.marca}</div>
-            <div>🚗 Modelo: ${motorista.modelo}</div>
-            <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
-            <div>📅 Ano: ${motorista.ano}</div>
-            <div>🔠 Placa: ${motorista.placa}</div>
-            <div>🎨 Cor: ${motorista.cor}</div>
-            <div>📞 Telefone: ${motorista.telefone}</div>
-            ${statusTexto}
-            ${
-              !emServico
-                ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}', '${motorista.id}')">📲 Escolher este motorista</button>`
-                : ""
-            }
-          `;
-          lista.appendChild(card);
-        });
+    const statusTexto = emServico
+      ? `<div style="color: red; font-weight: bold;">🚧 Motorista em serviço</div>`
+      : `<div style="color: green; font-weight: bold;">🟢 Aguardando corrida</div>`;
+
+    // Criando o card principal do motorista
+    const card = document.createElement("div");
+    card.className = "motorista-card ativo";
+
+    // 🌸 Destaque visual para motoristas em serviço
+    if (emServico) {
+      card.style.backgroundColor = "#ffe6f0"; // rosa clarinho
+    }
+
+    card.innerHTML = `
+      <div><strong>👤 ${motorista.nome}</strong></div>
+      <div>🏷️ Marca: ${motorista.marca}</div>
+      <div>🚗 Modelo: ${motorista.modelo}</div>
+      <div>🚘 Tipo de carro: ${motorista["Tipo de carro"] || motorista.tipoCarro || "N/A"}</div>
+      <div>📅 Ano: ${motorista.ano}</div>
+      <div>🔠 Placa: ${motorista.placa}</div>
+      <div>🎨 Cor: ${motorista.cor}</div>
+      <div>📞 Telefone: ${motorista.telefone}</div>
+      ${statusTexto}
+      ${
+        !emServico
+          ? `<button onclick="enviarParaMotorista('${motorista.telefone}', '${motorista.nome}', '${motorista.id}')">📲 Escolher este motorista</button>`
+          : ""
+      }
+    `;
+
+    lista.appendChild(card);
+  });
+
 
       const corrida = JSON.parse(localStorage.getItem("corridaAtiva"));
       if (corrida) {
@@ -270,8 +280,7 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motor
     destino,
     valor: valorCorrida
   }));
-
-  listarMotoristasAtivos(); // ✅ Isso vai renderizar os botões no card do motorista
+  listarMotoristasAtivos();
 
   if (db) {
     try {
@@ -304,6 +313,7 @@ function cancelarMotorista() {
   if (corrida && db && motoristaId) {
     db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
 
+    // ✅ Atualiza o status da corrida para "cancelada"
     db.collection("corridas")
       .where("motoristaId", "==", motoristaId)
       .orderBy("inicio", "desc")
@@ -333,6 +343,7 @@ function finalizarCorrida() {
   if (db) {
     db.collection("motoristas").doc(motoristaId).update({ statusAtual: "aguardando" });
 
+    // ✅ Atualiza o status da corrida para "finalizada"
     db.collection("corridas")
       .where("motoristaId", "==", motoristaId)
       .orderBy("inicio", "desc")
