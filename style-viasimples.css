@@ -111,9 +111,12 @@ button:hover {
   margin-top: 25px;
   font-size: 16px;
   font-weight: 500;
-  text-align: center;
+  text-align: center; /* melhor alinhamento para texto com múltiplas linhas */
   color: #333;
+  line-height: 1.4; /* aumenta o espaçamento entre linhas */
+  white-space: pre-line; /* interpreta \n como quebra de linha */
 }
+
 
 /* === Lista de motoristas === */
 #listaMotoristas {
