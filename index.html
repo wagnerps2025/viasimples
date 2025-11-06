@@ -230,5 +230,20 @@
       msg.style.color = cor;
     }
   </script>
+  
+  <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/viasimples/service-worker.js")
+      .then(() => console.log("✅ Service Worker registrado"))
+      .catch(err => console.error("❌ Erro ao registrar SW:", err));
+  }
+</script>
+
+<!-- Banner de instalação do PWA -->
+<div id="install-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #FFD600; padding: 1em; text-align: center; z-index: 9999;">
+  <span>📲 Instale o ViaSimples para uma experiência completa!</span>
+  <button id="install-button" style="margin-left: 1em; padding: 0.5em 1em;">Instalar</button>
+</div>
+
 </body>
 </html>
