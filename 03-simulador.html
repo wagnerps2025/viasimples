@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Corrida - ViaSimples</title>
-  <link rel="manifest" href="/viasimples/manifest-simulador.json" />
   <link rel="stylesheet" href="style-viasimples.css" />
 </head>
 
@@ -56,62 +55,6 @@
 
   <!-- Google Maps API com boas práticas -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVB5urWdkPwjezcC6aMAPOZft9oZMyaUQ&libraries=places&callback=initMap&loading=async" async defer></script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/viasimples/service-worker.js")
-      .then(() => console.log("✅ Service Worker registrado"))
-      .catch(err => console.error("❌ Erro ao registrar SW:", err));
-  }
-</script>
-
-<script>
-  let deferredPrompt;
-
-  // Verifica se o app já está instalado
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-  // Verifica se o banner já foi mostrado
-  const bannerShown = localStorage.getItem("viasimplesInstallPromptShown");
-
-  if (!isStandalone && !bannerShown) {
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault(); // Impede o prompt automático
-      deferredPrompt = e;
-
-      // Exibe o banner personalizado
-      const banner = document.getElementById("install-banner");
-      banner.style.display = "block";
-
-      // Marca como mostrado para não repetir
-      localStorage.setItem("viasimplesInstallPromptShown", "true");
-
-      // Quando o usuário clicar em instalar
-      document.getElementById("install-button").addEventListener("click", () => {
-        banner.style.display = "none";
-        deferredPrompt.prompt();
-
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === "accepted") {
-            console.log("✅ App instalado");
-          } else {
-            console.log("❌ Instalação recusada");
-          }
-          deferredPrompt = null;
-        });
-      });
-    });
-  }
-</script>
-
-
-<!-- Banner de instalação do PWA -->
-<div id="install-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #FFD600; padding: 1em; text-align: center; z-index: 9999;">
-  <span>📲 Instale o ViaSimples para uma experiência completa!</span>
-  <button id="install-button" style="margin-left: 1em; padding: 0.5em 1em;">Instalar</button>
-</div>
-
-
 </body>
 </html>
 
