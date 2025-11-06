@@ -265,8 +265,8 @@ window.enviarParaMotorista = async function (telefoneBruto, nomeMotorista, motor
     `🛣️ Distância: ${distanciaTexto}\n` +
     `⏱️ Tempo estimado: ${duracaoTexto}\n` +
     `💰 Valor estimado: R$ ${valorCorrida.toFixed(2)}\n\n` +
-    `📍 Origem: ${origem}\n🔗 ${linkOrigem} (buscar)\n\n` +
-    `🎯 Destino: ${destino}\n🔗 ${linkDestino} (entregar)`;
+    `📍 Origem: ${origem}\n🔗 ${linkOrigem} (Iniciar)\n\n` +
+    `🎯 Destino: ${destino}\n🔗 ${linkDestino} (Finalizar)`;
 
   const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
   window.open(linkWhatsApp, "_blank");
@@ -363,3 +363,4 @@ function finalizarCorrida() {
   listarMotoristasAtivos();
   document.getElementById("resultadoCorrida").innerHTML = "✅ Corrida finalizada com sucesso.";
 }
+
